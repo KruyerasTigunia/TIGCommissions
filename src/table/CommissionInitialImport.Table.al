@@ -1,35 +1,39 @@
-table 50045 "Comm. Initial Import"
+table 50045 "CommissionInitialImportTigCM"
 {
-    // version TIGCOMMCust
-
+    Caption = 'Commission Initial Import';
+    DataClassification = CustomerContent;
 
     fields
     {
-        field(10;"Salesperson Code";Code[20])
+        field(10; "Salesperson Code"; Code[20])
         {
+            Caption = 'Salesperson Code';
+            DataClassification = CustomerContent;
             TableRelation = "Salesperson/Purchaser";
         }
-        field(20;"Customer No.";Code[20])
+        field(20; "Customer No."; Code[20])
         {
+            Caption = 'Customer No.';
+            DataClassification = CustomerContent;
             TableRelation = "Cust. Ledger Entry";
         }
-        field(30;"Comm. Rate";Decimal)
+        field(30; "Comm. Rate"; Decimal)
         {
+            Caption = 'Commission Rate';
+            DataClassification = CustomerContent;
         }
-        field(50;"Comm. Code";Code[20])
+        field(50; "Comm. Code"; Code[20])
         {
+            Caption = 'Commission Code';
+            DataClassification = CustomerContent;
         }
     }
 
     keys
     {
-        key(Key1;"Salesperson Code","Comm. Rate","Customer No.")
+        key(PK; "Salesperson Code", "Comm. Rate", "Customer No.")
         {
+            Clustered = true;
         }
     }
-
-    fieldgroups
-    {
-    }
 }
-
