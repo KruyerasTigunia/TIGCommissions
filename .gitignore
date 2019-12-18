@@ -1,0 +1,11 @@
+# AL files to ignore
+*.app
+*.g.xlf
+rad.json
+launch.json
+rad.json
+.alcache/
+.alpackages/
+.altemplates/
+permissionsAnalyzer.json
+

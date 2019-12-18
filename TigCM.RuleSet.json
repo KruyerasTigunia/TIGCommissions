@@ -1,0 +1,10 @@
+{
+    "name": "Tigunia Commissions Ruleset",
+    "description": "A list of project specific rules",
+    "rules": [
+        {
+            "id": "AA0005",
+            "action": "None"
+        }
+    ]
+}

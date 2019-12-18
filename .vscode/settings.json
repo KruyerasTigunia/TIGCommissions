@@ -1,0 +1,12 @@
+{
+    "CRS.RenameWithGit": true,
+    "CRS.FileNamePattern": "<ObjectNameShort>.<ObjectTypeShortPascalCase>.al",
+    "CRS.FileNamePatternExtensions": "<BaseNameShort>.<ObjectTypeShortPascalCase>.al",
+    "CRS.ExtensionObjectNamePattern": "<BaseNameShort><Suffix>",
+    "CRS.ObjectNameSuffix": "TigCM",
+    "CRS.RemoveSuffixFromFilename": true,
+    "CRS.OnSaveAlFileAction": "DoNothing",
+    "al.enableCodeAnalysis": true,
+    "al.codeAnalyzers": ["${CodeCop}","${AppSourceCop}","${UICop}"],
+    "al.ruleSetPath": ".\\TigCM.RuleSet.json"
+}

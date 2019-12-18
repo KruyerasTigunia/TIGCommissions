@@ -1,0 +1,40 @@
+{
+  "id": "4c68d262-2c57-4d30-994e-e7e9863c8f93",
+  "name": "Tigunia Commissions",
+  "publisher": "Tigunia",
+  "version": "1.0.0.0",
+  "brief": "Tigunia Commissions",
+  "description": "Tigunia commissions",
+  "privacyStatement": "https://www.tigunia.com",
+  "EULA": "https://www.tigunia.com",
+  "help": "https://www.tigunia.com",
+  "url": "https://www.tigunia.com",
+  "logo": "Tigunia.png",
+  "dependencies": [
+    {
+      "id": "63ca2fa4-4f03-4f2b-a480-172fef340d3f",
+      "publisher": "Microsoft",
+      "name": "System Application",
+      "version": "16.0.0.0"
+    },
+    {
+      "id": "437dbf0e-84ff-417a-965d-ed2bb9650972",
+      "publisher": "Microsoft",
+      "name": "Base Application",
+      "version": "16.0.0.0"
+    }
+  ],
+  "screenshots": [],
+  "platform": "15.0.0.0",
+  "idRanges": [
+    {
+      "from": 50000,
+      "to": 99999
+    }
+  ],
+  "contextSensitiveHelpUrl": "https://www.tigunia.com/Contact/",
+  "features": ["TranslationFile"],
+  "showMyCode": true,
+  "runtime": "5.0",
+  "target": "Cloud"
+}

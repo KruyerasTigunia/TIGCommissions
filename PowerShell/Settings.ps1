@@ -1,0 +1,11 @@
+$ImageName = 'mcr.microsoft.com/businesscentral/sandbox:us'
+#$InsiderImageName = 'bcinsider.azurecr.io/bcsandbox:us'
+$InsiderImageName = 'bcinsider.azurecr.io/bcsandbox-master:us'
+$LicenseFile = '.\BC 15 US.flf'
+$DevContainerName = 'TigCMDev' # should be the same as the ServerName in launch.json for the app
+$TestContainerName = 'TigCMTest' # should be the same as the ServerName in launch.json for the test app
+$InsiderContainerName = 'TigCMInsider' # should be the same as the ServerName in launch.json for the app
+$UserName = 'tigunia' 
+$Password = ConvertTo-SecureString 'Navision4ever!' -AsPlainText -Force
+$Credential = New-Object System.Management.Automation.PSCredential ($UserName, $Password)
+$AppFileName = '.\AppName_1.0.0.1.app'
