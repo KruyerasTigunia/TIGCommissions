@@ -1,4 +1,4 @@
-page 80005 "Commission Cust. Group Members"
+page 80005 "CommissionCustGrpMembersTigCM"
 {
     // version TIGCOMM1.0
 

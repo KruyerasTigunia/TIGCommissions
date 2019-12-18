@@ -1,4 +1,4 @@
-page 80014 "Commission Worksheet"
+page 80014 "CommissionWorksheetTigCM"
 {
     // version TIGCOMM1.0
 

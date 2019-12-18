@@ -1,4 +1,4 @@
-page 50089 "Comm. Setup Summary"
+page 50089 "CommSetupSummaryTigCM"
 {
     // version WCT,TIGCOMM1.0
 

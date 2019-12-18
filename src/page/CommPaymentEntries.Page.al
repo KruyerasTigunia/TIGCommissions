@@ -1,4 +1,4 @@
-page 80012 "Comm. Payment Entries"
+page 80012 "CommPaymentEntriesTigCM"
 {
     // version TIGCOMM1.0
 

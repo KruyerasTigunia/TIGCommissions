@@ -1,4 +1,4 @@
-page 80003 "Commission Plan Payees"
+page 80003 "CommissionPlanPayeesTigCM"
 {
     // version TIGCOMM1.0
 

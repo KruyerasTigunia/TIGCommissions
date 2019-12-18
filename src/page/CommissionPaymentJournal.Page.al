@@ -1,4 +1,4 @@
-page 80015 "Commission Payment Journal"
+page 80015 "CommissionPaymentJournalTigCM"
 {
     // version TIGCOMM1.0
 
@@ -1526,7 +1526,7 @@ page 80015 "Commission Payment Journal"
                         CurrPage.UPDATE(false);
                     end;
                 }
-                action(Preview)
+                action("Preview")
                 {
                     ApplicationArea = Basic, Suite;
                     CaptionML = ENU = 'Preview Posting',

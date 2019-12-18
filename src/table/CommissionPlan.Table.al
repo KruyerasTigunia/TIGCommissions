@@ -1,7 +1,7 @@
 table 80000 "CommissionPlanTigCM"
 {
-    DrillDownPageID = "Commission Plan List";
-    LookupPageID = "Commission Plan List";
+    DrillDownPageID = CommissionPlanListTigCM;
+    LookupPageID = CommissionPlanListTigCM;
 
     fields
     {

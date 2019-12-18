@@ -1,4 +1,4 @@
-page 80016 "Commission Setup"
+page 80016 "CommissionSetupTigCM"
 {
     // version TIGCOMM1.0
 

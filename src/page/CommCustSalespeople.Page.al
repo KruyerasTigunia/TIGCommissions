@@ -1,4 +1,4 @@
-page 80018 "Comm. Cust./Salespeople"
+page 80018 "CommCustSalespeopleTigCM"
 {
     // version TIGCOMM1.0
 

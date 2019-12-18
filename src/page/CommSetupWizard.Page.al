@@ -1,4 +1,4 @@
-page 80022 "Comm. Setup Wizard"
+page 80022 "CommSetupWizardTigCM"
 {
     // version TIGCOMM1.1
 
@@ -94,7 +94,7 @@ page 80022 "Comm. Setup Wizard"
                     Editable = MgrOptionsEditable;
                 }
             }
-            part(RecommendedActions; "Comm. Wizard Steps")
+            part(RecommendedActions; CommWizardStepsTigCM)
             {
                 Caption = 'Recommended Actions:';
                 Visible = ActionsVisible;
@@ -144,7 +144,7 @@ page 80022 "Comm. Setup Wizard"
         CommWizardStep: Record CommWizardStepTigCM;
         CommWizardStep2: Record CommWizardStepTigCM;
         CommWizardMgt: Codeunit CommissionWizardMgtTigCM;
-        CommSetupPage: Page "Commission Setup";
+        CommSetupPage: Page CommissionSetupTigCM;
         CommissionModel: Option "Current salesperson rates","One rate for all","Varies per customer","Varies per customer group","Varies per item","Varies per item group","Varies per customer and item","Varies per customer and item group","Varies per customer group and item","Varies per customer group and item group";
         DistributionMethod: Option Vendor,"External Provider",Manual;
         CreatePayableVendors: Option Yes,No;

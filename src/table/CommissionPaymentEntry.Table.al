@@ -4,8 +4,8 @@ table 80012 "CommissionPaymentEntryTigCM"
 
     // TIGCOMM1.0 Commissions
 
-    DrillDownPageID = "Comm. Payment Entries";
-    LookupPageID = "Comm. Payment Entries";
+    DrillDownPageID = CommPaymentEntriesTigCM;
+    LookupPageID = CommPaymentEntriesTigCM;
 
     fields
     {

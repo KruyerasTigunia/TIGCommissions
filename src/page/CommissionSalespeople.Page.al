@@ -1,4 +1,4 @@
-page 80019 "Commission Salespeople"
+page 80019 "CommissionSalespeopleTigCM"
 {
     // version TIGCOMM1.0
 
@@ -44,11 +44,11 @@ page 80019 "Commission Salespeople"
                                 ENC = 'Specifies the salesperson''s or purchaser''s telephone number.';
                 }
             }
-            part(Customers; "Comm. Salespeople/Customers")
+            part(Customers; CommSalespeopleCustomersTigCM)
             {
                 SubPageLink = "Salesperson Code" = FIELD(Code);
             }
-            part(Plans; "Comm. Salespeople/Plans")
+            part(Plans; CommSalespeoplePlansTigCM)
             {
                 SubPageLink = "Salesperson Code" = FIELD(Code);
             }
@@ -389,7 +389,7 @@ page 80019 "Commission Salespeople"
                 trigger OnAction();
                 var
                     CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
-                    CommCustSalespersons: Page "Comm. Salespeople/Customers";
+                    CommCustSalespersons: Page CommSalespeopleCustomersTigCM;
                 begin
                     CommCustSalesperson.RESET;
                     CommCustSalesperson.SETRANGE("Salesperson Code", Code);

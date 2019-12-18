@@ -1,4 +1,4 @@
-page 80021 "Comm. Salespeople/Plans"
+page 80021 "CommSalespeoplePlansTigCM"
 {
     // version TIGCOMM1.0
 

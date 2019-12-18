@@ -1,4 +1,4 @@
-page 80023 "Comm. Wizard Steps"
+page 80023 "CommWizardStepsTigCM"
 {
     // version TIGCOMM1.0
 

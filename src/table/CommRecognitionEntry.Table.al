@@ -4,8 +4,8 @@ table 80013 "CommRecognitionEntryTigCM"
 
     // TIGCOMM1.0 Commissions
 
-    DrillDownPageID = "Comm. Recognition Entries";
-    LookupPageID = "Comm. Recognition Entries";
+    DrillDownPageID = CommRecognitionEntriesTigCM;
+    LookupPageID = CommRecognitionEntriesTigCM;
 
     fields
     {

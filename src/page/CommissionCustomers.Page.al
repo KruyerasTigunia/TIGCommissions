@@ -1,4 +1,4 @@
-page 80008 "Commission Customers"
+page 80008 "CommissionCustomersTigCM"
 {
     // version TIGCOMM1.0
 
@@ -39,7 +39,7 @@ page 80008 "Commission Customers"
                 {
                 }
             }
-            part(Salespeople; "Comm. Cust./Salespeople")
+            part(Salespeople; CommCustSalespeopleTigCM)
             {
                 SubPageLink = "Customer No." = FIELD("No.");
                 UpdatePropagation = Both;
@@ -60,7 +60,7 @@ page 80008 "Commission Customers"
                 trigger OnAction();
                 var
                     CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
-                    CommCustSalespersons: Page "Comm. Cust./Salespeople";
+                    CommCustSalespersons: Page CommCustSalespeopleTigCM;
                 begin
                     CommCustSalesperson.RESET;
                     CommCustSalesperson.SETRANGE("Customer No.", "No.");

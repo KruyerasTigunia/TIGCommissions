@@ -1,10 +1,10 @@
-page 80001 "Commission Plan List"
+page 80001 "CommissionPlanListTigCM"
 {
     // version TIGCOMM1.0
 
     // TIGCOMM1.0 Commissions
 
-    CardPageID = "Commission Plan Card";
+    CardPageID = CommissionPlanCardTigCM;
     PageType = List;
     SourceTable = CommissionPlanTigCM;
 
@@ -58,7 +58,7 @@ page 80001 "Commission Plan List"
                 trigger OnAction();
                 var
                     CommPlanCalc: Record CommissionPlanCalculationTigCM;
-                    CommPlanCalcs: Page "Commission Plan Calculations";
+                    CommPlanCalcs: Page CommPlanCalculationsTigCM;
                 begin
                     CLEAR(CommPlanCalc);
                     CommPlanCalc.SETRANGE("Commission Plan Code", Code);
@@ -74,7 +74,7 @@ page 80001 "Commission Plan List"
                 trigger OnAction();
                 var
                     CommPlanPayee: Record CommissionPlanPayeeTigCM;
-                    CommPlanPayees: Page "Commission Plan Payees";
+                    CommPlanPayees: Page CommissionPlanPayeesTigCM;
                 begin
                     CLEAR(CommPlanPayees);
                     CommPlanPayee.SETRANGE("Commission Plan Code", Code);

@@ -1,4 +1,4 @@
-page 80006 "Commission Unit Groups"
+page 80006 "CommissionUnitGroupsTigCM"
 {
     // version TIGCOMM1.0
 
@@ -32,7 +32,7 @@ page 80006 "Commission Unit Groups"
             {
                 //The property 'PromotedIsBig' can only be set if the property 'Promoted' is set to 'true'
                 //PromotedIsBig = true;
-                RunObject = Page "Commission Unit Group Members";
+                RunObject = Page CommissionUnitGrpMembersTigCM;
                 RunPageLink = "Group Code" = FIELD(Code);
             }
         }

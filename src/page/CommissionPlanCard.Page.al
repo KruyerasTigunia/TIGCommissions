@@ -1,4 +1,4 @@
-page 80000 "Commission Plan Card"
+page 80000 "CommissionPlanCardTigCM"
 {
     // version TIGCOMM1.0
 
@@ -78,7 +78,7 @@ page 80000 "Commission Plan Card"
                 trigger OnAction();
                 var
                     CommPlanCalc: Record CommissionPlanCalculationTigCM;
-                    CommPlanCalcs: Page "Commission Plan Calculations";
+                    CommPlanCalcs: Page CommPlanCalculationsTigCM;
                 begin
                     CLEAR(CommPlanCalc);
                     CommPlanCalc.SETRANGE("Commission Plan Code", Code);
@@ -94,7 +94,7 @@ page 80000 "Commission Plan Card"
                 trigger OnAction();
                 var
                     CommPlanPayee: Record CommissionPlanPayeeTigCM;
-                    CommPlanPayees: Page "Commission Plan Payees";
+                    CommPlanPayees: Page CommissionPlanPayeesTigCM;
                 begin
                     CLEAR(CommPlanPayees);
                     CommPlanPayee.SETRANGE("Commission Plan Code", Code);

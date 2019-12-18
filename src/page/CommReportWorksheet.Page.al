@@ -1,4 +1,4 @@
-page 80011 "Comm. Report Worksheet"
+page 80011 "CommReportWorksheetTigCM"
 {
     // version TIGCOMM1.0
 

@@ -1,4 +1,4 @@
-page 80013 "Comm. Recognition Entries"
+page 80013 "CommRecognitionEntriesTigCM"
 {
     // version TIGCOMM1.0
 

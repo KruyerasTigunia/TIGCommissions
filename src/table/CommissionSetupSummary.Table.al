@@ -4,8 +4,8 @@ table 80011 "CommissionSetupSummaryTigCM"
 
     // TIGCOMM1.0 Commissions
 
-    DrillDownPageID = "Comm. Report Worksheet";
-    LookupPageID = "Comm. Report Worksheet";
+    DrillDownPageID = CommReportWorksheetTigCM;
+    LookupPageID = CommReportWorksheetTigCM;
 
     fields
     {

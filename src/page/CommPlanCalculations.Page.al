@@ -1,4 +1,4 @@
-page 80002 "Commission Plan Calculations"
+page 80002 "CommPlanCalculationsTigCM"
 {
     // version TIGCOMM1.0
 

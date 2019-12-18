@@ -1,4 +1,4 @@
-page 80009 "Commission Vendor Groups"
+page 80009 "CommissionVendorGroupsTigCM"
 {
     // version TIGCOMM1.0
 
