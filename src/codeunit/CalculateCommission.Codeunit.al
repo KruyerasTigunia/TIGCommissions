@@ -19,32 +19,32 @@ codeunit 80000 "CalculateCommissionTigCM"
 
     procedure InitCalculation(BatchName2: Code[20]; PostingDate2: Date; PayoutDate2: Date);
     begin
-        CommWkshtLine.RESET;
-        CommWkshtLine.SETRANGE("Batch Name", BatchName2);
-        if CommWkshtLine.FINDLAST then
+        CommWkshtLine.Reset();
+        CommWkshtLine.SetRange("Batch Name", BatchName2);
+        if CommWkshtLine.FindLast() then
             LineNo := CommWkshtLine."Line No." + 10000
         else
             LineNo := 10000;
         BatchName := BatchName2;
         PostingDate := PostingDate2;
         PayoutDate := PayoutDate2;
-        Salesperson.RESET;
+        Salesperson.Reset();
     end;
 
     procedure CalculateCommission(var CommApprovalEntry: Record CommApprovalEntryTigCM; BatchName2: Code[20]);
     begin
-        CommPlan.GET(CommApprovalEntry."Commission Plan Code");
+        CommPlan.Get(CommApprovalEntry."Commission Plan Code");
         BatchName := BatchName2;
 
-        CommPlanCalc.SETRANGE("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
-        if CommPlanCalc.FINDSET then begin
+        CommPlanCalc.SetRange("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
+        if CommPlanCalc.FindSet() then begin
             repeat
                 //xxxIF (CommPlanCalc."Commission Rate" <> 0) OR (CommPlanCalc."Introductory Rate" <> 0) THEN BEGIN
                 if 1 = 1 then begin
                     //Apply introductory rate if applicable
                     if CommPlanCalc."Introductory Rate" <> 0 then begin
-                        CommPlanCalc.TESTFIELD("Intro Expires From First Sale");
-                        CommRecogEntry.GET(CommApprovalEntry."Comm. Recog. Entry No.");
+                        CommPlanCalc.TestField("Intro Expires From First Sale");
+                        CommRecogEntry.Get(CommApprovalEntry."Comm. Recog. Entry No.");
                         if CheckCustGetsIntroRate(CommApprovalEntry."Customer No.",
                                                   CommRecogEntry."Creation Date",
                                                   CommPlanCalc."Intro Expires From First Sale")
@@ -53,92 +53,92 @@ codeunit 80000 "CalculateCommissionTigCM"
                     end;
                     if ABS(CommApprovalEntry."Basis Qty. Approved") >= ABS(CommPlanCalc."Tier Amount/Qty.") then begin
                         //Exclude any existing worksheet lines. Flowfield to worksheet line by Comm. Approval Entry No.
-                        CommApprovalEntry.CALCFIELDS("Basis Amt. (Wksht.)");
-                        CalcCommAmt := ROUND((CommApprovalEntry."Basis Amt. Approved" -
+                        CommApprovalEntry.CalcFields("Basis Amt. (Wksht.)");
+                        CalcCommAmt := Round((CommApprovalEntry."Basis Amt. Approved" -
                                               CommApprovalEntry."Basis Amt. (Wksht.)") *
                                              (CommPlanCalc."Commission Rate" / 100), 0.01);
                         PendingCommAmt := 0;
                         PendingBasisAmt := 0;
                         if CalcCommAmt <> 0 then begin
-                            CommRecogEntry.GET(CommApprovalEntry."Comm. Recog. Entry No.");
+                            CommRecogEntry.Get(CommApprovalEntry."Comm. Recog. Entry No.");
 
                             if not CommPlan."Manager Level" then begin
-                                CommCustSalesperson.SETRANGE("Customer No.", CommApprovalEntry."Customer No.");
-                                if CommCustSalesperson.FINDSET then begin
+                                CommCustSalesperson.SetRange("Customer No.", CommApprovalEntry."Customer No.");
+                                if CommCustSalesperson.FindSet() then begin
                                     repeat
                                         //Salesperson can be passed in pre-filtered via SetSalespersonFilter()
                                         //so we just confirm this salesperson is in that set
-                                        Salesperson.SETRANGE(Code, CommCustSalesperson."Salesperson Code");
-                                        if Salesperson.FINDFIRST then begin
-                                            CommPlanPayee.RESET;
-                                            CommPlanPayee.SETRANGE("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
-                                            CommPlanPayee.SETRANGE("Salesperson Code", CommCustSalesperson."Salesperson Code");
-                                            if CommPlanPayee.FINDFIRST then begin
+                                        Salesperson.SetRange(Code, CommCustSalesperson."Salesperson Code");
+                                        if Salesperson.FindFirst() then begin
+                                            CommPlanPayee.Reset();
+                                            CommPlanPayee.SetRange("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
+                                            CommPlanPayee.SetRange("Salesperson Code", CommCustSalesperson."Salesperson Code");
+                                            if CommPlanPayee.FindFirst() then begin
                                                 InsertCommWkshtLine(CommApprovalEntry,
-                                                                    ROUND(CalcCommAmt * (CommCustSalesperson."Split Pct." / 100), 0.01),
-                                                                    ROUND(CommRecogEntry."Basis Amt." * (CommCustSalesperson."Split Pct." / 100), 0.01),
+                                                                    Round(CalcCommAmt * (CommCustSalesperson."Split Pct." / 100), 0.01),
+                                                                    Round(CommRecogEntry."Basis Amt." * (CommCustSalesperson."Split Pct." / 100), 0.01),
                                                                     Salesperson.Code);
                                             end;
                                         end;
-                                    until CommCustSalesperson.NEXT = 0;
+                                    until CommCustSalesperson.Next() = 0;
 
                                     //Add rounding to last worksheet line
                                     if CalcCommAmt - PendingCommAmt <> 0 then begin
-                                        CommWkshtLine.VALIDATE(Amount, CommWkshtLine.Amount + (CalcCommAmt - PendingCommAmt));
-                                        CommWkshtLine.MODIFY;
+                                        CommWkshtLine.Validate(Amount, CommWkshtLine.Amount + (CalcCommAmt - PendingCommAmt));
+                                        CommWkshtLine.Modify();
                                     end;
                                 end;
                             end else begin
                                 //This section only applies to Manager Level plans where it is not required
                                 //to specify a salesperson is attached to a specific customer
-                                CommPlanPayee.RESET;
-                                CommPlanPayee.SETRANGE("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
-                                CommPlanPayee.SETRANGE("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
-                                if CommPlanPayee.FINDSET then begin
+                                CommPlanPayee.Reset();
+                                CommPlanPayee.SetRange("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
+                                CommPlanPayee.SetRange("Commission Plan Code", CommApprovalEntry."Commission Plan Code");
+                                if CommPlanPayee.FindSet() then begin
                                     repeat
                                         InsertCommWkshtLine(CommApprovalEntry,
-                                                            ROUND(CalcCommAmt * (CommPlanPayee."Manager Split Pct." / 100), 0.01),
-                                                            ROUND(CommRecogEntry."Basis Amt." *
+                                                            Round(CalcCommAmt * (CommPlanPayee."Manager Split Pct." / 100), 0.01),
+                                                            Round(CommRecogEntry."Basis Amt." *
                                                             (CommPlanPayee."Manager Split Pct." / 100), 0.01),
                                                             CommPlanPayee."Salesperson Code");
-                                    until CommPlanPayee.NEXT = 0;
+                                    until CommPlanPayee.Next() = 0;
 
                                     //Add rounding to last worksheet line. Includes either commission to pay
                                     //or that the entire basis amt. is accounted for
                                     if (CalcCommAmt - PendingCommAmt <> 0) or
                                        (CommRecogEntry."Basis Amt." <> PendingBasisAmt)
                                     then begin
-                                        CommWkshtLine.VALIDATE(Amount, CommWkshtLine.Amount + (CalcCommAmt - PendingCommAmt));
-                                        CommWkshtLine.VALIDATE("Basis Amt. (Split)", CommWkshtLine."Basis Amt. (Split)" + (CalcCommAmt - PendingCommAmt));
-                                        CommWkshtLine.MODIFY;
+                                        CommWkshtLine.Validate(Amount, CommWkshtLine.Amount + (CalcCommAmt - PendingCommAmt));
+                                        CommWkshtLine.Validate("Basis Amt. (Split)", CommWkshtLine."Basis Amt. (Split)" + (CalcCommAmt - PendingCommAmt));
+                                        CommWkshtLine.Modify();
                                     end;
                                 end;
                             end;
                         end;
                     end;
                 end;
-            until CommPlanCalc.NEXT = 0;
+            until CommPlanCalc.Next() = 0;
         end;
     end;
 
     local procedure InsertCommWkshtLine(CommApprovalEntry: Record CommApprovalEntryTigCM; CommAmt: Decimal; BasisAmtSplit: Decimal; SalespersonCode: Code[20]);
     begin
         with CommWkshtLine do begin
-            INIT;
-            VALIDATE("Batch Name", BatchName);
+            Init();
+            Validate("Batch Name", BatchName);
             "Line No." := LineNo;
             "System Created" := true;
-            VALIDATE("Entry Type", CommApprovalEntry."Entry Type");
-            VALIDATE("Posting Date", PostingDate);
-            VALIDATE("Payout Date", PayoutDate);
-            VALIDATE("Customer No.", CommApprovalEntry."Customer No.");
-            VALIDATE("Salesperson Code", SalespersonCode);
-            VALIDATE("Source Document No.", CommApprovalEntry."Document No.");
-            VALIDATE("Trigger Method", CommApprovalEntry."Trigger Method");
-            VALIDATE("Trigger Document No.", CommApprovalEntry."Trigger Document No.");
-            VALIDATE(Quantity, CommApprovalEntry."Basis Qty. Approved");
-            VALIDATE(Amount, CommAmt);
-            VALIDATE("Basis Amt. (Split)", BasisAmtSplit);
+            Validate("Entry Type", CommApprovalEntry."Entry Type");
+            Validate("Posting Date", PostingDate);
+            Validate("Payout Date", PayoutDate);
+            Validate("Customer No.", CommApprovalEntry."Customer No.");
+            Validate("Salesperson Code", SalespersonCode);
+            Validate("Source Document No.", CommApprovalEntry."Document No.");
+            Validate("Trigger Method", CommApprovalEntry."Trigger Method");
+            Validate("Trigger Document No.", CommApprovalEntry."Trigger Document No.");
+            Validate(Quantity, CommApprovalEntry."Basis Qty. Approved");
+            Validate(Amount, CommAmt);
+            Validate("Basis Amt. (Split)", BasisAmtSplit);
             "Comm. Approval Entry No." := CommApprovalEntry."Entry No.";
 
             case CommApprovalEntry."Document Type" of
@@ -158,7 +158,7 @@ codeunit 80000 "CalculateCommissionTigCM"
             Description := FORMAT(CommApprovalEntry."Customer No.") + '/ ' + DocTypeDesc +
                            ' ' + FORMAT(CommApprovalEntry."Document No.");
             "Commission Plan Code" := CommApprovalEntry."Commission Plan Code";
-            INSERT;
+            Insert();
             LineNo += 1;
             PendingCommAmt += CommAmt;
             PendingBasisAmt += BasisAmtSplit;
@@ -167,10 +167,10 @@ codeunit 80000 "CalculateCommissionTigCM"
 
     procedure SetSalespersonFilter(var Salesperson2: Record "Salesperson/Purchaser");
     begin
-        Salesperson.RESET;
-        Salesperson.FILTERGROUP(2);
-        Salesperson.COPYFILTERS(Salesperson2);
-        Salesperson.FILTERGROUP(0);
+        Salesperson.Reset();
+        Salesperson.FilterGroup(2);
+        Salesperson.CopyFilters(Salesperson2);
+        Salesperson.FilterGroup(0);
     end;
 
     local procedure CheckCustGetsIntroRate(CustomerNo: Code[20]; RecogDate: Date; DatePeriod: DateFormula): Boolean;
@@ -179,10 +179,11 @@ codeunit 80000 "CalculateCommissionTigCM"
         NegDatePeriod: DateFormula;
     begin
         EVALUATE(NegDatePeriod, '-' + FORMAT(DatePeriod));
-        SalesShptHeader.SETCURRENTKEY("Sell-to Customer No.");
-        SalesShptHeader.SETRANGE("Sell-to Customer No.", CustomerNo);
-        SalesShptHeader.SETFILTER("Posting Date", '<%1', CALCDATE(NegDatePeriod, RecogDate));
-        exit(SalesShptHeader.FINDFIRST);
+        SalesShptHeader.SetCurrentKey("Sell-to Customer No.");
+        SalesShptHeader.SetRange("Sell-to Customer No.", CustomerNo);
+        SalesShptHeader.SetFilter("Posting Date", '<%1', CALCDATE(NegDatePeriod, RecogDate));
+        //exit(SalesShptHeader.FindFirst());
+        exit(not SalesShptHeader.IsEmpty());
     end;
 }
 

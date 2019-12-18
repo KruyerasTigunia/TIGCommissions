@@ -1,15 +1,5 @@
 codeunit 80002 "CommissionWizardMgtTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
-
-    trigger OnRun();
-    begin
-        // see ???
-    end;
-
     var
         CommSetup: Record CommissionSetupTigCM;
         CommPlan: Record CommissionPlanTigCM;
@@ -24,183 +14,183 @@ codeunit 80002 "CommissionWizardMgtTigCM"
         CommEntry: Record CommissionSetupSummaryTigCM;
         Vendor: Record Vendor;
         HasCommSetup: Boolean;
-        Text001: Label 'Setup Wizard has already been run.';
-        Text002: Label 'Action not allowed. Commission transactions have already been posted.';
         VendorsCreated: Boolean;
+        SetupWizardAlreadyRunErr: Label 'Setup Wizard has already been run.';
+        ActionNotAllowedErr: Label 'Action not allowed. Commission transactions have already been posted.';
 
     procedure CreateCommSetup(RecogTriggerMethod: Option Booking,Shipment,Invoice,Payment; PayableTriggerMethod: Option Booking,Shipment,Invoice,Payment);
     begin
         with CommSetup do begin
-            INIT;
-            VALIDATE("Def. Commission Type", "Def. Commission Type"::Percent);
-            VALIDATE("Def. Commission Basis", "Def. Commission Basis"::"Line Margin");
-            VALIDATE("Recog. Trigger Method", RecogTriggerMethod);
-            VALIDATE("Payable Trigger Method", PayableTriggerMethod);
-            INSERT(true);
+            Init();
+            Validate("Def. Commission Type", "Def. Commission Type"::Percent);
+            Validate("Def. Commission Basis", "Def. Commission Basis"::"Line Margin");
+            Validate("Recog. Trigger Method", RecogTriggerMethod);
+            Validate("Payable Trigger Method", PayableTriggerMethod);
+            Insert(true);
         end;
     end;
 
     procedure DeleteSetupData();
     begin
-        if not CommEntry.ISEMPTY then
-            ERROR(Text002);
-        GetCommSetup;
+        if not CommEntry.IsEmpty() then
+            Error(ActionNotAllowedErr);
+        GetCommSetup();
         if CommSetup."Wizard Run" then
-            ERROR(Text001);
+            Error(SetupWizardAlreadyRunErr);
 
-        CommSetup.DELETEALL(true);
-        CommPlan.RESET;
-        CommPlan.DELETEALL(true);
-        CommPlanPayee.RESET;
-        CommPlanPayee.DELETEALL(true);
-        CommPlanCalcLine.RESET;
-        CommPlanCalcLine.DELETEALL(true);
-        CommCustGroup.RESET;
-        CommCustGroup.DELETEALL(true);
-        CommCustGroupMember.RESET;
-        CommCustGroupMember.DELETEALL(true);
-        CommCustSalesperson.RESET;
-        CommCustSalesperson.DELETEALL(true);
-        DeleteCommWizardSteps;
+        CommSetup.DeleteAll(true);
+        CommPlan.Reset();
+        CommPlan.DeleteAll(true);
+        CommPlanPayee.Reset();
+        CommPlanPayee.DeleteAll(true);
+        CommPlanCalcLine.Reset();
+        CommPlanCalcLine.DeleteAll(true);
+        CommCustGroup.Reset();
+        CommCustGroup.DeleteAll(true);
+        CommCustGroupMember.Reset();
+        CommCustGroupMember.DeleteAll(true);
+        CommCustSalesperson.Reset();
+        CommCustSalesperson.DeleteAll(true);
+        DeleteCommWizardSteps();
     end;
 
     procedure CreatePayableVendors();
     begin
-        Salesperson.RESET;
-        if Salesperson.FINDSET then begin
+        Salesperson.Reset();
+        if Salesperson.FindSet() then begin
             repeat
                 with Vendor do begin
-                    if not GET(Salesperson.Code) then begin
-                        INIT;
-                        VALIDATE("No.", Salesperson.Code);
-                        VALIDATE(Name, Salesperson.Name);
-                        //VALIDATE(Address
-                        //VALIDATE("Address 2"
-                        //VALIDATE(City
-                        //VALIDATE(County
-                        //VALIDATE("Post Code"
-                        //VALIDATE("Country/Region Code"
-                        VALIDATE("Phone No.", Salesperson."Phone No.");
-                        VALIDATE("E-Mail", Salesperson."E-Mail");
-                        INSERT(true);
+                    if not Get(Salesperson.Code) then begin
+                        Init();
+                        Validate("No.", Salesperson.Code);
+                        Validate(Name, Salesperson.Name);
+                        //Validate(Address
+                        //Validate("Address 2"
+                        //Validate(City
+                        //Validate(County
+                        //Validate("Post Code"
+                        //Validate("Country/Region Code"
+                        Validate("Phone No.", Salesperson."Phone No.");
+                        Validate("E-Mail", Salesperson."E-Mail");
+                        Insert(true);
                     end;
                 end;
-            until Salesperson.NEXT = 0;
+            until Salesperson.Next() = 0;
             VendorsCreated := true;
         end;
     end;
 
     procedure CreateCommPlan(CommPlanCode: Code[20]; UnitType: Integer; Desc: Text[50]; PayOnDiscounts: Boolean): Code[20];
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup."Wizard Run" then
-            ERROR(Text001);
+            Error(SetupWizardAlreadyRunErr);
 
         with CommPlan do begin
-            INIT;
-            VALIDATE(Code, CommPlanCode);
+            Init();
+            Validate(Code, CommPlanCode);
             Description := Desc;
-            VALIDATE("Source Type", "Source Type"::Customer);
-            VALIDATE("Source Method", "Source Method"::Group); //for this function we always use a salesperson group
+            Validate("Source Type", "Source Type"::Customer);
+            Validate("Source Method", "Source Method"::Group); //for this function we always use a salesperson group
             "Source Method Code" := Code; //no validate as comm. cust. group not built yet
-            VALIDATE("Unit Type", UnitType);
-            VALIDATE("Unit Method", "Unit Method"::All);
-            VALIDATE("Commission Type", "Commission Type"::Percent);
-            VALIDATE("Commission Basis", "Commission Basis"::"Line Margin");
-            VALIDATE("Recognition Trigger Method", CommSetup."Recog. Trigger Method");
-            VALIDATE("Payable Trigger Method", CommSetup."Payable Trigger Method");
-            VALIDATE("Pay On Invoice Discounts", PayOnDiscounts);
-            INSERT(true);
+            Validate("Unit Type", UnitType);
+            Validate("Unit Method", "Unit Method"::All);
+            Validate("Commission Type", "Commission Type"::Percent);
+            Validate("Commission Basis", "Commission Basis"::"Line Margin");
+            Validate("Recognition Trigger Method", CommSetup."Recog. Trigger Method");
+            Validate("Payable Trigger Method", CommSetup."Payable Trigger Method");
+            Validate("Pay On Invoice Discounts", PayOnDiscounts);
+            Insert(true);
             exit(Code);
         end;
     end;
 
     procedure CreateCommPlanPayee(CommPlanCode: Code[20]; SalespersonCode: Code[20]; DistributionMethod: Option Vendor,"NAV employee",Paychex,ADP,"Other 3rd party"; DistributionAccountNo: Code[20]);
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup."Wizard Run" then
-            ERROR(Text001);
+            Error(SetupWizardAlreadyRunErr);
 
-        Salesperson.RESET;
+        Salesperson.Reset();
         if SalespersonCode <> '' then
-            Salesperson.SETRANGE(Code, SalespersonCode);
-        if Salesperson.FINDSET then begin
+            Salesperson.SetRange(Code, SalespersonCode);
+        if Salesperson.FindSet() then begin
             repeat
                 with CommPlanPayee do begin
-                    INIT;
-                    VALIDATE("Commission Plan Code", CommPlanCode);
-                    VALIDATE("Salesperson Code", Salesperson.Code);
-                    VALIDATE("Distribution Method", DistributionMethod);
+                    Init();
+                    Validate("Commission Plan Code", CommPlanCode);
+                    Validate("Salesperson Code", Salesperson.Code);
+                    Validate("Distribution Method", DistributionMethod);
                     if VendorsCreated then
-                        VALIDATE("Distribution Code", Salesperson.Code);
-                    VALIDATE("Distribution Account No.", DistributionAccountNo);
-                    INSERT(true);
+                        Validate("Distribution Code", Salesperson.Code);
+                    Validate("Distribution Account No.", DistributionAccountNo);
+                    Insert(true);
                 end;
-            until Salesperson.NEXT = 0;
+            until Salesperson.Next() = 0;
         end;
     end;
 
     procedure CreateCommPlanCalcLine(CommPlanCode: Code[20]; CommRate: Decimal);
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup."Wizard Run" then
-            ERROR(Text001);
+            Error(SetupWizardAlreadyRunErr);
 
         with CommPlanCalcLine do begin
-            INIT;
-            VALIDATE("Commission Plan Code", CommPlanCode);
-            VALIDATE("Commission Rate", CommRate);
-            INSERT(true);
+            Init();
+            Validate("Commission Plan Code", CommPlanCode);
+            Validate("Commission Rate", CommRate);
+            Insert(true);
         end;
     end;
 
     procedure CreateCommCustSalesperson();
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup."Wizard Run" then
-            ERROR(Text001);
+            Error(SetupWizardAlreadyRunErr);
 
-        Customer.RESET;
-        Salesperson.RESET;
-        if Salesperson.FINDSET then begin
+        Customer.Reset();
+        Salesperson.Reset();
+        if Salesperson.FindSet() then begin
             repeat
-                Customer.SETRANGE("Salesperson Code", Salesperson.Code);
-                if Customer.FINDSET then begin
+                Customer.SetRange("Salesperson Code", Salesperson.Code);
+                if Customer.FindSet() then begin
                     repeat
                         with CommCustSalesperson do begin
-                            INIT;
-                            VALIDATE("Customer No.", Customer."No.");
-                            VALIDATE("Salesperson Code", Salesperson.Code);
-                            INSERT(true);
+                            Init();
+                            Validate("Customer No.", Customer."No.");
+                            Validate("Salesperson Code", Salesperson.Code);
+                            Insert(true);
                         end;
-                    until Customer.NEXT = 0;
+                    until Customer.Next() = 0;
                 end;
-            until Salesperson.NEXT = 0;
+            until Salesperson.Next() = 0;
         end;
     end;
 
     procedure CreateCommCustGroup(SalespersonCode: Code[20]);
     begin
-        Customer.RESET;
+        Customer.Reset();
         with Salesperson do begin
-            RESET;
+            Reset();
             if SalespersonCode <> '' then
-                SETRANGE(Code, SalespersonCode);
-            if Salesperson.FINDSET then begin
+                SetRange(Code, SalespersonCode);
+            if Salesperson.FindSet() then begin
                 repeat
-                    CommCustGroup.INIT;
-                    CommCustGroup.VALIDATE(Code, Salesperson.Code);
-                    CommCustGroup.INSERT(true);
-                    Customer.SETRANGE("Salesperson Code", Salesperson.Code);
-                    if Customer.FINDSET then begin
+                    CommCustGroup.Init();
+                    CommCustGroup.Validate(Code, Salesperson.Code);
+                    CommCustGroup.Insert(true);
+                    Customer.SetRange("Salesperson Code", Salesperson.Code);
+                    if Customer.FindSet() then begin
                         repeat
-                            CommCustGroupMember.INIT;
-                            CommCustGroupMember.VALIDATE("Group Code", CommCustGroup.Code);
-                            CommCustGroupMember.VALIDATE("Customer No.", Customer."No.");
-                            CommCustGroupMember.INSERT(true);
-                        until Customer.NEXT = 0;
+                            CommCustGroupMember.Init();
+                            CommCustGroupMember.Validate("Group Code", CommCustGroup.Code);
+                            CommCustGroupMember.Validate("Customer No.", Customer."No.");
+                            CommCustGroupMember.Insert(true);
+                        until Customer.Next() = 0;
                     end;
-                until NEXT = 0;
+                until Next() = 0;
             end;
         end;
     end;
@@ -208,14 +198,14 @@ codeunit 80002 "CommissionWizardMgtTigCM"
     local procedure GetCommSetup();
     begin
         if not HasCommSetup then begin
-            if CommSetup.GET then
+            if CommSetup.Get() then
                 HasCommSetup := true;
         end;
     end;
 
     procedure DeleteCommWizardSteps();
     begin
-        CommWizardStep.DELETEALL(true);
+        CommWizardStep.DeleteAll(true);
     end;
 
     procedure InsertCommWizardStep(Description: Text[250]; ActionCode: Code[20]; OfferHelp: Boolean);
@@ -223,18 +213,18 @@ codeunit 80002 "CommissionWizardMgtTigCM"
         EntryNo: Integer;
     begin
         with CommWizardStep do begin
-            if FINDLAST then
+            if FindLast() then
                 EntryNo := "Entry No." + 1
             else
                 EntryNo := 1;
 
-            INIT;
+            Init();
             "Entry No." := EntryNo;
             "Action Msg." := Description;
             "Action Code" := ActionCode;
             if OfferHelp then
                 Help := '*';
-            INSERT;
+            Insert();
         end;
     end;
 }

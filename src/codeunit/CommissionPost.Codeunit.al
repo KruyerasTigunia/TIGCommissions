@@ -18,149 +18,144 @@ codeunit 80001 "CommissionPostTigCM"
 
     var
         CommSetup: Record CommissionSetupTigCM;
-        SalesLineTemp: Record "Sales Line" temporary;
-        CommEntry: Record CommissionSetupSummaryTigCM;
-        CommEntryTemp: Record CommissionSetupSummaryTigCM temporary;
         CommRecogEntry: Record CommRecognitionEntryTigCM;
-        RecognitionText: Label 'Recognition of %1 %2';
-        CommRecogEntryTemp: Record CommRecognitionEntryTigCM temporary;
         CommApprovalEntry: Record CommApprovalEntryTigCM;
-        CommApprovalEntryTemp: Record CommApprovalEntryTigCM temporary;
-        CommPmtEntry: Record CommissionPaymentEntryTigCM;
-        CommPmtEntryTemp: Record CommissionPaymentEntryTigCM temporary;
         CommPlan: Record CommissionPlanTigCM;
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
         CommPlanPayee: Record CommissionPlanPayeeTigCM;
         PurchHeader: Record "Purchase Header";
         PurchLine: Record "Purchase Line";
+        CommEntryTemp: Record CommissionSetupSummaryTigCM temporary;
+        CommRecogEntryTemp: Record CommRecognitionEntryTigCM temporary;
+        CommApprovalEntryTemp: Record CommApprovalEntryTigCM temporary;
+        CommPmtEntryTemp: Record CommissionPaymentEntryTigCM temporary;
         PurchHeaderTemp: Record "Purchase Header" temporary;
         PurchLineTemp: Record "Purchase Line" temporary;
         SalesHeaderGlobalTemp: Record "Sales Header" temporary;
+        SalesLineTemp: Record "Sales Line" temporary;
         EntryNo: Integer;
-        RecogEntryNo: Integer;
         PmtEntryNo: Integer;
         ApprEntryNo: Integer;
         TriggerDocNo: Code[20];
         HasCommSetup: Boolean;
-        Text001: Label 'Nothing to Post.';
-        EntryType: Option Commission,Clawback,Advance,Adjustment;
-        Text002: Label 'Confirm Posting?';
-        Text003: Label 'Posting Cancelled.';
-        Text004: Label 'You cannot post filtered records. Instead delete any lines you do not want to post.';
-        Text005: Label 'Posting Complete.';
-        Text006: Label 'The Commission Plan Payee is missing a Distribution Code. See Commission Plan %1, Salesperson %2.';
-        Text007: Label 'The Commission Plan Payee is missing a Distribution Account No. See Commission Plan %1, Salesperson %2.';
         Recognized: Boolean;
+        EntryType: Option Commission,Clawback,Advance,Adjustment;
         TriggerMethod: Option Booking,Shipment,Invoice,Payment,,,Credit;
-        Text008: Label 'There are pending Commission Payment Entries related to this invoice. Are you sure you want to continue and delete this document?';
-        Text009: Label 'There are pending Commission Payment Entries related to this line. Are you sure you want to continue and delete this line?';
-        Text010: Label 'Delete cancelled.';
-        Text011: Label 'Batch Name:';
-        Text012: Label 'You must specify a Batch Name in the worksheet before posting.';
-        Text013: Label 'Commission Processing incomplete. Delete not allowed.';
+        NothingToPostErr: Label 'Nothing to Post.';
+        ConfirmPostQst: Label 'Confirm Posting?';
+        PostCancelledErr: Label 'Posting Cancelled.';
+        FilteredRecordsErr: Label 'You cannot post filtered records. Instead delete any lines you do not want to post.';
+        PostCompleteMsg: Label 'Posting Complete.';
+        MissingDistributionErr: Label 'The Commission Plan Payee is missing a Distribution Code. See Commission Plan %1, Salesperson %2.';
+        MissingAccountErr: Label 'The Commission Plan Payee is missing a Distribution Account No. See Commission Plan %1, Salesperson %2.';
+        DeleteDocQst: Label 'There are pending Commission Payment Entries related to this invoice. Are you sure you want to continue and delete this document?';
+        DeleteLineQst: Label 'There are pending Commission Payment Entries related to this line. Are you sure you want to continue and delete this line?';
+        DeleteCancelledErr: Label 'Delete cancelled.';
+        BatchNameErr: Label 'You must specify a Batch Name in the worksheet before posting.';
+        ProcessingIncompleteErr: Label 'Commission Processing incomplete. Delete not allowed.';
 
     local procedure GetCommSetup();
     begin
         if not HasCommSetup then begin
-            CommSetup.GET;
+            CommSetup.Get();
             HasCommSetup := true;
         end;
     end;
 
     local procedure GetCustPlans(var CommPlanTemp: Record CommissionPlanTigCM temporary; CustomerNo: Code[20]): Boolean;
     var
-        CommPlan: Record CommissionPlanTigCM;
+        MyCommPlan: Record CommissionPlanTigCM;
         CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
     begin
-        CommPlan.SETCURRENTKEY("Source Type", "Source Method", "Source Method Code");
-        CommPlan.SETRANGE("Source Type", CommPlan."Source Type"::Customer);
-        CommPlan.SETRANGE("Source Method", CommPlan."Source Method"::Specific);
-        CommPlan.SETRANGE("Source Method Code", CustomerNo);
-        CommPlan.SETRANGE("Manager Level", false);
-        CommPlan.SETRANGE(Disabled, false);
-        if CommPlan.FINDSET then begin
+        MyCommPlan.SetCurrentKey("Source Type", "Source Method", "Source Method Code");
+        MyCommPlan.SetRange("Source Type", MyCommPlan."Source Type"::Customer);
+        MyCommPlan.SetRange("Source Method", MyCommPlan."Source Method"::Specific);
+        MyCommPlan.SetRange("Source Method Code", CustomerNo);
+        MyCommPlan.SetRange("Manager Level", false);
+        MyCommPlan.SetRange(Disabled, false);
+        if MyCommPlan.FindSet() then begin
             repeat
-                if PlanHasPayees(CommPlan.Code) then begin
-                    CommPlanTemp := CommPlan;
-                    CommPlanTemp.INSERT;
+                if PlanHasPayees(MyCommPlan.Code) then begin
+                    CommPlanTemp := MyCommPlan;
+                    CommPlanTemp.Insert();
                 end;
-            until CommPlan.NEXT = 0;
+            until MyCommPlan.Next() = 0;
         end;
 
-        CommCustGroupMember.SETCURRENTKEY("Customer No.");
-        CommCustGroupMember.SETRANGE("Customer No.", CustomerNo);
-        if CommCustGroupMember.FINDFIRST then begin
-            CommPlan.RESET;
-            CommPlan.SETCURRENTKEY("Source Type", "Source Method", "Source Method Code");
-            CommPlan.SETRANGE("Source Type", CommPlan."Source Type"::Customer);
-            CommPlan.SETRANGE("Source Method", CommPlan."Source Method"::Group);
-            CommPlan.SETRANGE("Source Method Code", CommCustGroupMember."Group Code");
-            CommPlan.SETRANGE("Manager Level", false);
-            CommPlan.SETRANGE(Disabled, false);
-            if CommPlan.FINDSET then begin
+        CommCustGroupMember.SetCurrentKey("Customer No.");
+        CommCustGroupMember.SetRange("Customer No.", CustomerNo);
+        if CommCustGroupMember.FindFirst() then begin
+            MyCommPlan.Reset();
+            MyCommPlan.SetCurrentKey("Source Type", "Source Method", "Source Method Code");
+            MyCommPlan.SetRange("Source Type", MyCommPlan."Source Type"::Customer);
+            MyCommPlan.SetRange("Source Method", MyCommPlan."Source Method"::Group);
+            MyCommPlan.SetRange("Source Method Code", CommCustGroupMember."Group Code");
+            MyCommPlan.SetRange("Manager Level", false);
+            MyCommPlan.SetRange(Disabled, false);
+            if MyCommPlan.FindSet() then begin
                 repeat
-                    if PlanHasPayees(CommPlan.Code) then begin
-                        CommPlanTemp := CommPlan;
-                        CommPlanTemp.INSERT;
+                    if PlanHasPayees(MyCommPlan.Code) then begin
+                        CommPlanTemp := MyCommPlan;
+                        CommPlanTemp.Insert();
                     end;
-                until CommPlan.NEXT = 0;
+                until MyCommPlan.Next() = 0;
             end;
         end;
 
         //Find any plans for all customers
-        CommPlan.RESET;
-        CommPlan.SETCURRENTKEY("Source Type", "Source Method", "Source Method Code");
-        CommPlan.SETRANGE("Source Type", CommPlan."Source Type"::Customer);
-        CommPlan.SETRANGE("Source Method", CommPlan."Source Method"::All);
-        CommPlan.SETRANGE("Manager Level", false);
-        CommPlan.SETRANGE(Disabled, false);
-        if CommPlan.FINDSET then begin
+        MyCommPlan.Reset();
+        MyCommPlan.SetCurrentKey("Source Type", "Source Method", "Source Method Code");
+        MyCommPlan.SetRange("Source Type", MyCommPlan."Source Type"::Customer);
+        MyCommPlan.SetRange("Source Method", MyCommPlan."Source Method"::All);
+        MyCommPlan.SetRange("Manager Level", false);
+        MyCommPlan.SetRange(Disabled, false);
+        if MyCommPlan.FindSet() then begin
             repeat
-                if PlanHasPayees(CommPlan.Code) then begin
-                    CommPlanTemp := CommPlan;
-                    CommPlanTemp.INSERT;
+                if PlanHasPayees(MyCommPlan.Code) then begin
+                    CommPlanTemp := MyCommPlan;
+                    CommPlanTemp.Insert();
                 end;
-            until CommPlan.NEXT = 0;
+            until MyCommPlan.Next() = 0;
         end;
 
         //Find any manager level plans
-        CommPlan.RESET;
-        CommPlan.SETCURRENTKEY("Source Type", "Source Method", "Source Method Code");
-        CommPlan.SETRANGE("Source Type", CommPlan."Source Type"::Customer);
-        CommPlan.SETRANGE("Manager Level", true);
-        CommPlan.SETRANGE(Disabled, false);
-        if CommPlan.FINDSET then begin
+        MyCommPlan.Reset();
+        MyCommPlan.SetCurrentKey("Source Type", "Source Method", "Source Method Code");
+        MyCommPlan.SetRange("Source Type", MyCommPlan."Source Type"::Customer);
+        MyCommPlan.SetRange("Manager Level", true);
+        MyCommPlan.SetRange(Disabled, false);
+        if MyCommPlan.FindSet() then begin
             repeat
-                if (CommPlan."Source Method" = CommPlan."Source Method"::Specific) and
-                   (CommPlan."Source Method Code" = CustomerNo)
+                if (MyCommPlan."Source Method" = MyCommPlan."Source Method"::Specific) and
+                   (MyCommPlan."Source Method Code" = CustomerNo)
                 then begin
-                    if PlanHasPayees(CommPlan.Code) then begin
-                        CommPlanTemp := CommPlan;
-                        CommPlanTemp.INSERT;
+                    if PlanHasPayees(MyCommPlan.Code) then begin
+                        CommPlanTemp := MyCommPlan;
+                        CommPlanTemp.Insert();
                     end;
                 end;
-                if CommPlan."Source Method" = CommPlan."Source Method"::Group then begin
-                    if CustomerInGroup(CommPlan."Source Method Code", CustomerNo) then begin
-                        if PlanHasPayees(CommPlan.Code) then begin
-                            CommPlanTemp := CommPlan;
-                            CommPlanTemp.INSERT;
+                if MyCommPlan."Source Method" = MyCommPlan."Source Method"::Group then begin
+                    if CustomerInGroup(MyCommPlan."Source Method Code", CustomerNo) then begin
+                        if PlanHasPayees(MyCommPlan.Code) then begin
+                            CommPlanTemp := MyCommPlan;
+                            CommPlanTemp.Insert();
                         end;
                     end;
                 end;
-                if CommPlan."Source Method" = CommPlan."Source Method"::All then begin
-                    if PlanHasPayees(CommPlan.Code) then begin
-                        CommPlanTemp := CommPlan;
-                        CommPlanTemp.INSERT;
+                if MyCommPlan."Source Method" = MyCommPlan."Source Method"::All then begin
+                    if PlanHasPayees(MyCommPlan.Code) then begin
+                        CommPlanTemp := MyCommPlan;
+                        CommPlanTemp.Insert();
                     end;
                 end;
-            until CommPlan.NEXT = 0;
+            until MyCommPlan.Next() = 0;
         end;
 
-        exit(CommPlanTemp.COUNT > 0);
+        exit(CommPlanTemp.Count() > 0);
     end;
 
     local procedure GetItemPlan(CustCommPlanTemp: Record CommissionPlanTigCM temporary; var SalesLine: Record "Sales Line"; var CommPlanCode: Code[20]): Boolean;
     var
-        CommPlan: Record CommissionPlanTigCM;
         CommUnitGroupMember: Record CommissionUnitGroupMemberTigCM;
     begin
         //Only include customer plans that apply to the item
@@ -170,10 +165,10 @@ codeunit 80001 "CommissionPostTigCM"
                  (CustCommPlanTemp."Unit Method Code" = SalesLine."No."));
         end else begin
             //Check for group match
-            CommUnitGroupMember.SETCURRENTKEY(Type, "No.");
-            CommUnitGroupMember.SETRANGE(Type, SalesLine.Type);
-            CommUnitGroupMember.SETRANGE("No.", SalesLine."No.");
-            if CommUnitGroupMember.FINDFIRST then begin
+            CommUnitGroupMember.SetCurrentKey(Type, "No.");
+            CommUnitGroupMember.SetRange(Type, SalesLine.Type);
+            CommUnitGroupMember.SetRange("No.", SalesLine."No.");
+            if CommUnitGroupMember.FindFirst() then begin
                 if CustCommPlanTemp."Unit Type" = SalesLine.Type then begin
                     if CustCommPlanTemp."Unit Method" = CustCommPlanTemp."Unit Method"::Group then
                         exit(CustCommPlanTemp."Unit Method Code" = CommUnitGroupMember."Group Code");
@@ -195,7 +190,7 @@ codeunit 80001 "CommissionPostTigCM"
     local procedure CalcBaseQty(Qty: Decimal): Decimal;
     begin
         with SalesLineTemp do begin
-            TESTFIELD("Qty. per Unit of Measure");
+            TestField("Qty. per Unit of Measure");
             exit(ROUND(Qty * "Qty. per Unit of Measure", 0.00001));
         end;
     end;
@@ -204,107 +199,108 @@ codeunit 80001 "CommissionPostTigCM"
     var
         CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
     begin
-        CommCustGroupMember.SETRANGE("Group Code", CommGroupCode);
-        CommCustGroupMember.SETRANGE("Customer No.", CustomerNo);
-        exit(CommCustGroupMember.FINDFIRST);
+        CommCustGroupMember.SetRange("Group Code", CommGroupCode);
+        CommCustGroupMember.SetRange("Customer No.", CustomerNo);
+        //exit(CommCustGroupMember.FindFirst());
+        exit(not CommCustGroupMember.IsEmpty());
     end;
 
     local procedure PlanHasPayees(CommPlanCode2: Code[20]): Boolean;
     var
-        CommPlanPayee: Record CommissionPlanPayeeTigCM;
+        MyCommPlanPayee: Record CommissionPlanPayeeTigCM;
     begin
-        CommPlanPayee.SETRANGE("Commission Plan Code", CommPlanCode2);
-        CommPlanPayee.SETFILTER("Salesperson Code", '<>%1', '');
-        exit(CommPlanPayee.FINDFIRST);
+        MyCommPlanPayee.SetRange("Commission Plan Code", CommPlanCode2);
+        MyCommPlanPayee.SetFilter("Salesperson Code", '<>%1', '');
+        //exit(MyCommPlanPayee.FindFirst());
+        exit(not MyCommPlanPayee.IsEmpty());
     end;
 
     local procedure ResetCodeunit();
     begin
         //This codeunit is single instance so vars need reset after each run
-        CLEARALL;
-        CommEntryTemp.RESET;
-        CommEntryTemp.DELETEALL;
-        CommRecogEntryTemp.RESET;
-        CommRecogEntryTemp.DELETEALL;
-        CommApprovalEntryTemp.RESET;
-        CommApprovalEntryTemp.DELETEALL;
-        CommPmtEntryTemp.RESET;
-        CommPmtEntryTemp.DELETEALL;
-        SalesLineTemp.RESET;
-        SalesLineTemp.DELETEALL;
-        PurchHeaderTemp.RESET;
-        PurchHeaderTemp.DELETEALL;
-        PurchLineTemp.RESET;
-        PurchLineTemp.DELETEALL;
+        ClearAll();
+        CommEntryTemp.Reset();
+        CommEntryTemp.DeleteAll();
+        CommRecogEntryTemp.Reset();
+        CommRecogEntryTemp.DeleteAll();
+        CommApprovalEntryTemp.Reset();
+        CommApprovalEntryTemp.DeleteAll();
+        CommPmtEntryTemp.Reset();
+        CommPmtEntryTemp.DeleteAll();
+        SalesLineTemp.Reset();
+        SalesLineTemp.DeleteAll();
+        PurchHeaderTemp.Reset();
+        PurchHeaderTemp.DeleteAll();
+        PurchLineTemp.Reset();
+        PurchLineTemp.DeleteAll();
     end;
 
     [EventSubscriber(ObjectType::Table, 38, 'OnBeforeDeleteEvent', '', false, false)]
     procedure OnPurchHeaderDelete(var Rec: Record "Purchase Header"; RunTrigger: Boolean);
     var
-        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        MyCommPmtEntry: Record CommissionPaymentEntryTigCM;
     begin
         if not RunTrigger then
             exit;
 
         with Rec do begin
-            CommPmtEntry.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
-            CommPmtEntry.SETRANGE("Payment Method", CommPmtEntry."Payment Method"::"Check as Vendor");
-            CommPmtEntry.SETRANGE("Payment Ref. No.", "No.");
-            CommPmtEntry.SETRANGE(Posted, false);
-            if CommPmtEntry.FINDFIRST then
-                if not CONFIRM(Text008, false) then
-                    ERROR(Text010);
+            MyCommPmtEntry.SetCurrentKey("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
+            MyCommPmtEntry.SetRange("Payment Method", MyCommPmtEntry."Payment Method"::"Check as Vendor");
+            MyCommPmtEntry.SetRange("Payment Ref. No.", "No.");
+            MyCommPmtEntry.SetRange(Posted, false);
+            if MyCommPmtEntry.FindFirst() then
+                if not Confirm(DeleteDocQst, false) then
+                    Error(DeleteCancelledErr);
 
-            CommPmtEntry.DELETEALL;
+            MyCommPmtEntry.DeleteAll();
         end;
     end;
 
     [EventSubscriber(ObjectType::Table, 39, 'OnBeforeModifyEvent', '', false, false)]
     procedure OnPurchLineModify(var Rec: Record "Purchase Line"; var xRec: Record "Purchase Line"; RunTrigger: Boolean);
     var
-        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        MyCommPmtEntry: Record CommissionPaymentEntryTigCM;
     begin
         if not RunTrigger then
             exit;
 
         with Rec do begin
-            CommPmtEntry.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
-            CommPmtEntry.SETRANGE("Payment Method", CommPmtEntry."Payment Method"::"Check as Vendor");
-            CommPmtEntry.SETRANGE("Payment Ref. No.", "No.");
-            CommPmtEntry.SETRANGE("Payment Ref. Line No.", "Line No.");
-            CommPmtEntry.SETRANGE(Posted, false);
-            if CommPmtEntry.FINDFIRST then
-                ERROR(Text004);
+            MyCommPmtEntry.SetCurrentKey("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
+            MyCommPmtEntry.SetRange("Payment Method", MyCommPmtEntry."Payment Method"::"Check as Vendor");
+            MyCommPmtEntry.SetRange("Payment Ref. No.", "No.");
+            MyCommPmtEntry.SetRange("Payment Ref. Line No.", "Line No.");
+            MyCommPmtEntry.SetRange(Posted, false);
+            //if MyCommPmtEntry.FindFirst() then
+            if not MyCommPmtEntry.IsEmpty() then
+                Error(FilteredRecordsErr);
         end;
     end;
 
     [EventSubscriber(ObjectType::Table, 39, 'OnBeforeDeleteEvent', '', false, false)]
     local procedure OnDeletePOLine(var Rec: Record "Purchase Line"; RunTrigger: Boolean);
     var
-        CommPmtEntry: Record CommissionPaymentEntryTigCM;
-        CommApprovalEntry: Record CommApprovalEntryTigCM;
-        CommRecogEntry: Record CommRecognitionEntryTigCM;
+        MyCommPmtEntry: Record CommissionPaymentEntryTigCM;
     begin
         if not RunTrigger then
             exit;
 
         with Rec do begin
-            CommPmtEntry.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
-            CommPmtEntry.SETRANGE("Payment Method", CommPmtEntry."Payment Method"::"Check as Vendor");
-            CommPmtEntry.SETRANGE("Payment Ref. No.", "Document No.");
-            CommPmtEntry.SETRANGE("Payment Ref. Line No.", "Line No.");
-            CommPmtEntry.SETRANGE(Posted, false);
-            if CommPmtEntry.FINDFIRST then
-                if not CONFIRM(Text009, false) then
-                    ERROR(Text010);
+            MyCommPmtEntry.SetCurrentKey("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
+            MyCommPmtEntry.SetRange("Payment Method", MyCommPmtEntry."Payment Method"::"Check as Vendor");
+            MyCommPmtEntry.SetRange("Payment Ref. No.", "Document No.");
+            MyCommPmtEntry.SetRange("Payment Ref. Line No.", "Line No.");
+            MyCommPmtEntry.SetRange(Posted, false);
+            if MyCommPmtEntry.FindFirst() then
+                if not Confirm(DeleteLineQst, false) then
+                    Error(DeleteCancelledErr);
 
-            CommPmtEntry.DELETEALL;
+            MyCommPmtEntry.DeleteAll();
         end;
         /*???
-        IF CommPmtEntry.FINDSET THEN BEGIN
+        IF CommPmtEntry.FindSet() THEN BEGIN
           REPEAT
-            //CommApprovalEntry.GET(CommPmtEntry.com
-          UNTIL CommPmtEntry.NEXT = 0;
+            //CommApprovalEntry.Get(CommPmtEntry.com
+          UNTIL CommPmtEntry.Next() = 0;
         END;
         */
 
@@ -313,32 +309,32 @@ codeunit 80001 "CommissionPostTigCM"
     [EventSubscriber(ObjectType::Codeunit, 90, 'OnAfterPostPurchaseDoc', '', false, false)]
     local procedure UpdateCommPmtEntryPosted(var PurchaseHeader: Record "Purchase Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; PurchRcpHdrNo: Code[20]; RetShptHdrNo: Code[20]; PurchInvHdrNo: Code[20]; PurchCrMemoHdrNo: Code[20]);
     var
-        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        MyCommPmtEntry: Record CommissionPaymentEntryTigCM;
         CommPmtEntry2: Record CommissionPaymentEntryTigCM;
-        CommApprovalEntry: Record CommApprovalEntryTigCM;
+        MyCommApprovalEntry: Record CommApprovalEntryTigCM;
     begin
         //Update Comm. Pmt. Entry, related Comm. Appr. Entry, and flag to prevent deletion
-        CommPmtEntry.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
-        CommPmtEntry.SETRANGE("Payment Method", CommPmtEntry."Payment Method"::"Check as Vendor");
-        CommPmtEntry.SETRANGE("Payment Ref. No.", PurchaseHeader."No.");
-        CommPmtEntry.SETRANGE(Posted, false);
-        if CommPmtEntry.FINDSET then begin
+        MyCommPmtEntry.SetCurrentKey("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
+        MyCommPmtEntry.SetRange("Payment Method", MyCommPmtEntry."Payment Method"::"Check as Vendor");
+        MyCommPmtEntry.SetRange("Payment Ref. No.", PurchaseHeader."No.");
+        MyCommPmtEntry.SetRange(Posted, false);
+        if MyCommPmtEntry.FindSet() then begin
             repeat
-                CommPmtEntry2.GET(CommPmtEntry."Entry No.");
+                CommPmtEntry2.Get(MyCommPmtEntry."Entry No.");
                 CommPmtEntry2.Posted := true;
-                CommPmtEntry2."Date Paid" := WORKDATE;
+                CommPmtEntry2."Date Paid" := WorkDate();
                 if PurchInvHdrNo <> '' then
                     CommPmtEntry2."Payment Ref. No." := PurchInvHdrNo;
                 if PurchCrMemoHdrNo <> '' then
                     CommPmtEntry2."Payment Ref. No." := PurchCrMemoHdrNo;
-                CommPmtEntry2.MODIFY;
+                CommPmtEntry2.Modify();
 
-                CommApprovalEntry.GET(CommPmtEntry."Comm. Appr. Entry No.");
-                if CommApprovalEntry.Open then begin
-                    CommApprovalEntry.Open := false;
-                    CommApprovalEntry.MODIFY;
+                MyCommApprovalEntry.Get(MyCommPmtEntry."Comm. Appr. Entry No.");
+                if MyCommApprovalEntry.Open then begin
+                    MyCommApprovalEntry.Open := false;
+                    MyCommApprovalEntry.Modify();
                 end;
-            until CommPmtEntry.NEXT = 0;
+            until MyCommPmtEntry.Next() = 0;
         end;
     end;
 
@@ -350,9 +346,9 @@ codeunit 80001 "CommissionPostTigCM"
         Invoice: Boolean;
     begin
         //We need to grab details from sales lines here that are not available in the AfterPost events
-        ResetCodeunit;
+        ResetCodeunit();
 
-        SalesHeader.CALCFIELDS(Amount);
+        SalesHeader.CalcFields(Amount);
         SalesHeaderGlobalTemp := SalesHeader;
         SalesHeaderGlobalTemp.Amount := SalesHeader.Amount;
 
@@ -366,12 +362,12 @@ codeunit 80001 "CommissionPostTigCM"
         Ship := false;
         Invoice := false;
 
-        SalesLineTemp.RESET;
-        SalesLineTemp.DELETEALL;
-        SalesLine.SETRANGE("Document Type", SalesHeaderGlobalTemp."Document Type");
-        SalesLine.SETRANGE("Document No.", SalesHeaderGlobalTemp."No.");
-        SalesLine.SETFILTER(Quantity, '<>%1', 0);
-        if SalesLine.FINDSET then begin
+        SalesLineTemp.Reset();
+        SalesLineTemp.DeleteAll();
+        SalesLine.SetRange("Document Type", SalesHeaderGlobalTemp."Document Type");
+        SalesLine.SetRange("Document No.", SalesHeaderGlobalTemp."No.");
+        SalesLine.SetFilter(Quantity, '<>%1', 0);
+        if SalesLine.FindSet() then begin
             repeat
                 if ((SalesHeaderGlobalTemp.Ship) and (SalesLine."Qty. to Ship" > 0)) or
                    ((SalesHeaderGlobalTemp.Invoice) and (SalesLine."Qty. to Invoice" > 0))
@@ -383,13 +379,13 @@ codeunit 80001 "CommissionPostTigCM"
                     then
                         SalesLineTemp."Qty. to Ship" := SalesLineTemp."Return Qty. to Receive";
 
-                    SalesLineTemp.INSERT;
+                    SalesLineTemp.Insert();
                 end;
                 if SalesLineTemp."Qty. to Ship" <> 0 then
                     Ship := true;
                 if SalesLineTemp."Qty. to Invoice" <> 0 then
                     Invoice := true;
-            until SalesLine.NEXT = 0;
+            until SalesLine.Next() = 0;
         end;
         if not Ship then
             SalesHeaderGlobalTemp.Ship := false;
@@ -399,9 +395,9 @@ codeunit 80001 "CommissionPostTigCM"
 
     [EventSubscriber(ObjectType::Codeunit, 414, 'OnAfterReleaseSalesDoc', '', false, false)]
     local procedure CheckRecognizeBooking(var SalesHeader: Record "Sales Header"; PreviewMode: Boolean);
-    var
-        TriggerMethod: Option Booking,Shipment,Invoice,"Partial Pmt.","Full Pmt.";
-        SalesLine: Record "Sales Line";
+    // var
+    //     SalesLine: Record "Sales Line";
+    //     MyTriggerMethod: Option Booking,Shipment,Invoice,"Partial Pmt.","Full Pmt.";
     begin
         //??? how to avoid dups for re-release
         //if nothing applied then delete CE and CRE
@@ -410,26 +406,28 @@ codeunit 80001 "CommissionPostTigCM"
         //xxx maybe for future
         exit;
 
-        ResetCodeunit;
-        SalesLineTemp.RESET;
-        SalesLineTemp.DELETEALL;
-        SalesLine.SETRANGE("Document Type", SalesHeader."Document Type");
-        SalesLine.SETRANGE("Document No.", SalesHeader."No.");
-        SalesLine.SETFILTER(Quantity, '<>%1', 0);
-        TriggerDocNo := SalesHeader."No.";
-        if SalesLine.FINDSET then begin
-            repeat
-                SalesLineTemp := SalesLine;
-                SalesLineTemp.INSERT;
-            until SalesLine.NEXT = 0;
-        end;
-        CheckOKToRecognize(TriggerMethod::Booking);
+        //FIXME - commented out to prevent unreachable code error, not even sure why
+        //        the function is even here if it exits immediately
+        // ResetCodeunit();
+        // SalesLineTemp.Reset();
+        // SalesLineTemp.DeleteAll();
+        // SalesLine.SetRange("Document Type", SalesHeader."Document Type");
+        // SalesLine.SetRange("Document No.", SalesHeader."No.");
+        // SalesLine.SetFilter(Quantity, '<>%1', 0);
+        // TriggerDocNo := SalesHeader."No.";
+        // if SalesLine.FindSet() then begin
+        //     repeat
+        //         SalesLineTemp := SalesLine;
+        //         SalesLineTemp.Insert();
+        //     until SalesLine.Next() = 0;
+        // end;
+        // CheckOKToRecognize(MyTriggerMethod::Booking);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, 80, 'OnAfterPostSalesDoc', '', false, false)]
-    local procedure CheckRecognizeShipment(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]; var SalesInvHdr: Record "Sales Invoice Header"; var SalesCrMemoHdr: Record "Sales Cr.Memo Header");
+    local procedure CheckRecognizeShipment(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]);
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup.Disabled then
             exit;
 
@@ -453,14 +451,13 @@ codeunit 80001 "CommissionPostTigCM"
         //the sequence subscriber events will fire in. Calling from here for control
         //so we know the recog entries were created first
         CheckApproveToPayPosting(SalesHeader, GenJnlPostLine, SalesShptHdrNo,
-                                 RetRcpHdrNo, SalesInvHdrNo, SalesCrMemoHdrNo,
-                                 SalesInvHdr, SalesCrMemoHdr);
+                                 RetRcpHdrNo, SalesInvHdrNo, SalesCrMemoHdrNo);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, 80, 'OnAfterPostSalesDoc', '', false, false)]
-    local procedure CheckRecognizeInvoice(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]; var SalesInvHdr: Record "Sales Invoice Header"; var SalesCrMemoHdr: Record "Sales Cr.Memo Header");
+    local procedure CheckRecognizeInvoice(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]);
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup.Disabled then
             exit;
 
@@ -486,8 +483,7 @@ codeunit 80001 "CommissionPostTigCM"
         //the sequence subscriber events will fire in. Calling from here for control
         //so we know the recog entries were created first
         CheckApproveToPayPosting(SalesHeader, GenJnlPostLine, SalesShptHdrNo,
-                                 RetRcpHdrNo, SalesInvHdrNo, SalesCrMemoHdrNo,
-                                 SalesInvHdr, SalesCrMemoHdr);
+                                 RetRcpHdrNo, SalesInvHdrNo, SalesCrMemoHdrNo);
     end;
 
     procedure CheckOKToRecognize(TriggerMethod: Option Booking,Shipment,Invoice,Payment,,,Credit): Boolean;
@@ -497,26 +493,26 @@ codeunit 80001 "CommissionPostTigCM"
         CommPlanCode: Code[20];
     begin
         //Temp sales line was pre-filled in the SetPrePostSalesLines() function
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup.Disabled then
             exit;
 
         //??? add partial or full payment logic in future
 
-        SalesLineTemp.SETRANGE("Qty. to Ship");
-        SalesLineTemp.SETRANGE("Qty. to Invoice");
-        //SalesLineTemp.SETRANGE("Return Qty. to Receive");
+        SalesLineTemp.SetRange("Qty. to Ship");
+        SalesLineTemp.SetRange("Qty. to Invoice");
+        //SalesLineTemp.SetRange("Return Qty. to Receive");
 
         //IF (SalesHeaderGlobalTemp."Document Type" = SalesHeaderGlobalTemp."Document Type"::Order) OR
         //   (SalesHeaderGlobalTemp."Document Type" = SalesHeaderGlobalTemp."Document Type"::Invoice)
         //THEN BEGIN
         case TriggerMethod of
             TriggerMethod::Booking:
-                SalesLineTemp.SETFILTER(Quantity, '<>%1', 0);
+                SalesLineTemp.SetFilter(Quantity, '<>%1', 0);
             TriggerMethod::Shipment:
-                SalesLineTemp.SETFILTER("Qty. to Ship", '<>%1', 0);
+                SalesLineTemp.SetFilter("Qty. to Ship", '<>%1', 0);
             TriggerMethod::Invoice:
-                SalesLineTemp.SETFILTER("Qty. to Invoice", '<>%1', 0);
+                SalesLineTemp.SetFilter("Qty. to Invoice", '<>%1', 0);
         end;
         //END;
 
@@ -526,23 +522,23 @@ codeunit 80001 "CommissionPostTigCM"
         THEN BEGIN
           CASE TriggerMethod OF
             TriggerMethod::Booking :
-              SalesLineTemp.SETFILTER(Quantity,'<>%1',0);
+              SalesLineTemp.SetFilter(Quantity,'<>%1',0);
             TriggerMethod::Shipment :
-              SalesLineTemp.SETFILTER("return qty. to receive",'<>%1',0);
+              SalesLineTemp.SetFilter("return qty. to receive",'<>%1',0);
             TriggerMethod::Invoice :
-              SalesLineTemp.SETFILTER("Qty. to Invoice",'<>%1',0);
+              SalesLineTemp.SetFilter("Qty. to Invoice",'<>%1',0);
           END;
         END;
         */
         //xxx
 
-        SalesLineTemp.FINDSET;
-        if not SalesLineTemp.FINDSET then
+        SalesLineTemp.FindSet();
+        if not SalesLineTemp.FindSet() then
             exit;
 
         GetCustPlans(CommPlanTemp, SalesLineTemp."Sell-to Customer No.");
         repeat
-            if CommPlanTemp.FINDSET then begin
+            if CommPlanTemp.FindSet() then begin
                 repeat
                     if CommPlanTemp."Recognition Trigger Method" = TriggerMethod then begin
                         //Adjust quantity and amounts based on action
@@ -579,19 +575,20 @@ codeunit 80001 "CommissionPostTigCM"
                             InitRecogEntry(SalesLineTemp2, CommPlanTemp.Code, TriggerDocNo);
                         end;
                     end;
-                until CommPlanTemp.NEXT = 0;
+                until CommPlanTemp.Next() = 0;
             end;
-        until SalesLineTemp.NEXT = 0;
+        until SalesLineTemp.Next() = 0;
 
         Recognized := true;
         if EntryNo > 0 then
-            FinalizeEntries;
+            FinalizeEntries();
 
     end;
 
-    local procedure CheckApproveToPayPosting(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]; var SalesInvHdr: Record "Sales Invoice Header"; var SalesCrMemoHdr: Record "Sales Cr.Memo Header");
+    //local procedure CheckApproveToPayPosting(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]; var SalesInvHdr: Record "Sales Invoice Header"; var SalesCrMemoHdr: Record "Sales Cr.Memo Header");
+    local procedure CheckApproveToPayPosting(var SalesHeader: Record "Sales Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; SalesShptHdrNo: Code[20]; RetRcpHdrNo: Code[20]; SalesInvHdrNo: Code[20]; SalesCrMemoHdrNo: Code[20]);
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup.Disabled then
             exit;
 
@@ -619,15 +616,16 @@ codeunit 80001 "CommissionPostTigCM"
     end;
 
     local procedure CheckApproveToPayPartPmt();
-    var
-        DetCustLedgEntry: Record "Detailed Cust. Ledg. Entry";
-        CommRecogEntry2: Record CommRecognitionEntryTigCM;
-        RemAmtToApply: Decimal;
-        AmtToApply: Decimal;
-        QtyToApply: Decimal;
-        AmtApplied: Decimal;
-        BasisAmt: Decimal;
-        LastTriggerDocNo: Code[20];
+    //FIXME all vars unused, probably because of all the commented out code
+    // var
+    //     DetCustLedgEntry: Record "Detailed Cust. Ledg. Entry";
+    //     CommRecogEntry2: Record CommRecognitionEntryTigCM;
+    //     RemAmtToApply: Decimal;
+    //     AmtToApply: Decimal;
+    //     QtyToApply: Decimal;
+    //     AmtApplied: Decimal;
+    //     BasisAmt: Decimal;
+    //     LastTriggerDocNo: Code[20];
     begin
         /*
         GetCommSetup;
@@ -642,27 +640,27 @@ codeunit 80001 "CommissionPostTigCM"
         //allow for unapply!!!!!
         
         TriggerMethod := TriggerMethod::"Partial Pmt.";
-        CommApprovalEntry.RESET;
-        CommApprovalEntry.SETCURRENTKEY("Det. Cust. Ledger Entry No.");
-        IF NOT CommApprovalEntry.FINDLAST THEN
-          CLEAR(CommApprovalEntry);
+        CommApprovalEntry.Reset();
+        CommApprovalEntry.SetCurrentKey("Det. Cust. Ledger Entry No.");
+        IF NOT CommApprovalEntry.FindLast() THEN
+          Clear(CommApprovalEntry);
         
         WITH DetCustLedgEntry DO BEGIN
-          SETCURRENTKEY("Initial Document Type","Entry Type","Customer No.",
+          SetCurrentKey("Initial Document Type","Entry Type","Customer No.",
                         "Currency Code","Initial Entry Global Dim. 1",
                         "Initial Entry Global Dim. 2","Posting Date");
-          SETFILTER("Entry No.",'>%1',CommApprovalEntry."Det. Cust. Ledger Entry No.");
-          SETRANGE("Initial Document Type","Initial Document Type"::Invoice);
-          SETRANGE("Entry Type","Entry Type"::Application);
-          SETFILTER("Document Type",'%1|%2',"Document Type"::Payment,"Document Type"::"Credit Memo");
-          IF FINDSET THEN BEGIN
+          SetFilter("Entry No.",'>%1',CommApprovalEntry."Det. Cust. Ledger Entry No.");
+          SetRange("Initial Document Type","Initial Document Type"::Invoice);
+          SetRange("Entry Type","Entry Type"::Application);
+          SetFilter("Document Type",'%1|%2',"Document Type"::Payment,"Document Type"::"Credit Memo");
+          IF FindSet() THEN BEGIN
             CommApprovalEntry.LOCKTABLE;
-            IF NOT CommApprovalEntry.FINDLAST THEN
-              CLEAR(CommApprovalEntry);
+            IF NOT CommApprovalEntry.FindLast() THEN
+              Clear(CommApprovalEntry);
             ApprEntryNo := CommApprovalEntry."Entry No.";
         
             REPEAT
-              CommRecogEntryTemp.SETCURRENTKEY("Document No.","Document Line No.");
+              CommRecogEntryTemp.SetCurrentKey("Document No.","Document Line No.");
               //Create entries for what is approved to pay. this will flowfield up to
               //the commission entry for each matching recognition entry until
               //no qty. left to apply
@@ -672,10 +670,10 @@ codeunit 80001 "CommissionPostTigCM"
               //specific transaction. We have to apply the sales line qty. being
               //invoiced to ALL transactions in that SET before reducing the
               //remaining qty. to apply. The triggering document no. binds the set.
-              CommRecogEntry.SETRANGE("Document No.",DetCustLedgEntry."Document No.");
-              CommRecogEntry.SETRANGE("Entry Type",CommRecogEntry."Entry Type"::Commission);
-              CommRecogEntry.SETRANGE(Open,TRUE);
-              IF CommRecogEntry.FINDSET THEN BEGIN
+              CommRecogEntry.SetRange("Document No.",DetCustLedgEntry."Document No.");
+              CommRecogEntry.SetRange("Entry Type",CommRecogEntry."Entry Type"::Commission);
+              CommRecogEntry.SetRange(Open,TRUE);
+              IF CommRecogEntry.FindSet() THEN BEGIN
                 //Since payments don't specify what was paid for, we apply by amount
                 //against the recognition entries until nothing left to apply
                 RemAmtToApply := Amount;
@@ -683,7 +681,7 @@ codeunit 80001 "CommissionPostTigCM"
                 LastTriggerDocNo := CommRecogEntry."Trigger Document No.";
         
                 REPEAT
-                  CommPlan.GET(CommRecogEntry."Commission Plan Code");
+                  CommPlan.Get(CommRecogEntry."Commission Plan Code");
                   IF CommPlan."Payable Trigger Method" = TriggerMethod THEN BEGIN
                     IF RemAmtToApply >= CommRecogEntry."Basis Amt. Remaining" THEN
                       AmtToApply := CommRecogEntry."Basis Amt. Remaining"
@@ -699,7 +697,7 @@ codeunit 80001 "CommissionPostTigCM"
                       IF BasisAmt - AmtApplied <> 0 THEN BEGIN
                         CommApprovalEntry."Basis Amt. Approved" += (BasisAmt - AmtApplied);
                         CommApprovalEntry."Amt. Remaining to Pay" := CommApprovalEntry."Basis Amt. Approved";
-                        CommApprovalEntry.MODIFY;
+                        CommApprovalEntry.Modify();
                       END;
         
                       BasisAmt := 0;
@@ -710,7 +708,7 @@ codeunit 80001 "CommissionPostTigCM"
                     AmtApplied += AmtToApply;
         
                     IF RemAmtToApply <> 0 THEN BEGIN
-                      CommApprovalEntry.INIT;
+                      CommApprovalEntry.Init();
                       CommApprovalEntry."Entry No." := 0;
                       CommApprovalEntry."Entry Type" := CommRecogEntry."Entry Type";
                       CommApprovalEntry."Det. Cust. Ledger Entry No." := "Entry No.";
@@ -730,22 +728,22 @@ codeunit 80001 "CommissionPostTigCM"
                       CommApprovalEntry."Commission Plan Code" := CommRecogEntry."Commission Plan Code";
                       CommApprovalEntry."Trigger Method" := TriggerMethod;
                       CommApprovalEntry."Trigger Document No." := "Document No.";
-                      CommApprovalEntry."Released to Pay Date" := WORKDATE;
-                      CommApprovalEntry."Released to Pay By" := USERID;
-                      CommApprovalEntry.INSERT;
+                      CommApprovalEntry."Released to Pay Date" := WorkDate();
+                      CommApprovalEntry."Released to Pay By" := UserId();
+                      CommApprovalEntry.Insert();
         
                       //Close recognition entry if appropriate
-                      CommRecogEntry.CALCFIELDS("Basis Amt. Approved to Pay");
+                      CommRecogEntry.CalcFields("Basis Amt. Approved to Pay");
                       IF ABS(CommRecogEntry."Basis Amt.") - ABS(CommRecogEntry."Basis Amt. Approved to Pay") = 0
                       THEN BEGIN
-                        CommRecogEntry2.GET(CommRecogEntry."Entry No.");
+                        CommRecogEntry2.Get(CommRecogEntry."Entry No.");
                         CommRecogEntry2.Open := FALSE;
-                        CommRecogEntry2.MODIFY;
+                        CommRecogEntry2.Modify();
                       END;
         
                       //Maybe move to function later on
                       ApprEntryNo += 1;
-                      CommApprovalEntryTemp.INIT;
+                      CommApprovalEntryTemp.Init();
                       CommApprovalEntryTemp."Entry No." := ApprEntryNo;
                       CommApprovalEntryTemp."Entry Type" := CommRecogEntry."Entry Type";
                       CommApprovalEntryTemp."Comm. Recog. Entry No." := CommRecogEntryTemp."Entry No.";
@@ -763,14 +761,14 @@ codeunit 80001 "CommissionPostTigCM"
                       CommApprovalEntryTemp."Commission Plan Code" := CommRecogEntry."Commission Plan Code";
                       CommApprovalEntryTemp."Trigger Method" := CommRecogEntry."Trigger Method";
                       CommApprovalEntryTemp."Trigger Document No." := CommRecogEntry."Trigger Document No.";
-                      CommApprovalEntryTemp."Released to Pay Date" := WORKDATE;
-                      CommApprovalEntryTemp."Released to Pay By" := USERID;
-                      CommApprovalEntryTemp.INSERT;
+                      CommApprovalEntryTemp."Released to Pay Date" := WorkDate();
+                      CommApprovalEntryTemp."Released to Pay By" := UserId();
+                      CommApprovalEntryTemp.Insert();
                     END;
                   END;
-                UNTIL (CommRecogEntry.NEXT = 0) OR (RemAmtToApply = 0);
+                UNTIL (CommRecogEntry.Next() = 0) OR (RemAmtToApply = 0);
               END;
-            UNTIL NEXT = 0;
+            UNTIL Next() = 0;
           END;
         END;
         */
@@ -779,10 +777,7 @@ codeunit 80001 "CommissionPostTigCM"
 
     procedure CheckApproveToPay(TriggerMethod: Option Booking,Shipment,Invoice,Payment,,,Credit): Boolean;
     var
-        CommPlanTemp: Record CommissionPlanTigCM temporary;
         CommRecogEntry2: Record CommRecognitionEntryTigCM;
-        CommApprovalEntry2: Record CommApprovalEntryTigCM;
-        CommPlanCode: Code[20];
         QtyToApply: Decimal;
         RemQtyToApply: Decimal;
         AmtToApply: Decimal;
@@ -793,23 +788,23 @@ codeunit 80001 "CommissionPostTigCM"
         //Only commisson entry types are in play here.
         //Any adjustment types create the comm. entry, comm. recog. entry, and comm. pmt. entry
         //as a matched set and will not process in this function
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup.Disabled then
             exit;
 
         //Temp sales line was pre-filled in the SetPrePostSalesLines() function
-        SalesLineTemp.SETRANGE("Qty. to Ship");
-        SalesLineTemp.SETRANGE("Qty. to Invoice");
+        SalesLineTemp.SetRange("Qty. to Ship");
+        SalesLineTemp.SetRange("Qty. to Invoice");
         case TriggerMethod of
             TriggerMethod::Shipment:
-                SalesLineTemp.SETFILTER("Qty. to Ship", '<>%1', 0);
+                SalesLineTemp.SetFilter("Qty. to Ship", '<>%1', 0);
             TriggerMethod::Invoice:
-                SalesLineTemp.SETFILTER("Qty. to Invoice", '<>%1', 0);
+                SalesLineTemp.SetFilter("Qty. to Invoice", '<>%1', 0);
         end;
         //??? add partial or full payment logic in future
 
-        CommRecogEntryTemp.SETCURRENTKEY("Document No.", "Document Line No.");
-        if not SalesLineTemp.FINDSET then
+        CommRecogEntryTemp.SetCurrentKey("Document No.", "Document Line No.");
+        if not SalesLineTemp.FindSet() then
             exit;
 
         repeat
@@ -822,13 +817,13 @@ codeunit 80001 "CommissionPostTigCM"
             //specific transaction. We have to apply the sales line qty. being
             //invoiced to ALL transactions in that SET before reducing the
             //remaining qty. to apply. The triggering document no. binds the set.
-            CommRecogEntry.SETRANGE("Document No.", SalesLineTemp."Document No.");
-            CommRecogEntry.SETRANGE("Document Line No.", SalesLineTemp."Line No.");
-            CommRecogEntry.SETRANGE("Unit Type", SalesLineTemp.Type);
-            CommRecogEntry.SETRANGE("Unit No.", SalesLineTemp."No.");
-            CommRecogEntry.SETRANGE("Entry Type", CommRecogEntry."Entry Type"::Commission);
-            CommRecogEntry.SETRANGE(Open, true);
-            if CommRecogEntry.FINDSET then begin
+            CommRecogEntry.SetRange("Document No.", SalesLineTemp."Document No.");
+            CommRecogEntry.SetRange("Document Line No.", SalesLineTemp."Line No.");
+            CommRecogEntry.SetRange("Unit Type", SalesLineTemp.Type);
+            CommRecogEntry.SetRange("Unit No.", SalesLineTemp."No.");
+            CommRecogEntry.SetRange("Entry Type", CommRecogEntry."Entry Type"::Commission);
+            CommRecogEntry.SetRange(Open, true);
+            if CommRecogEntry.FindSet() then begin
                 if TriggerMethod = TriggerMethod::Shipment then
                     QtyToApply := SalesLineTemp."Qty. to Ship"
                 else
@@ -836,7 +831,7 @@ codeunit 80001 "CommissionPostTigCM"
                 RemQtyToApply := QtyToApply;
                 LastTriggerDocNo := CommRecogEntry."Trigger Document No.";
                 repeat
-                    CommPlan.GET(CommRecogEntry."Commission Plan Code");
+                    CommPlan.Get(CommRecogEntry."Commission Plan Code");
                     if CommPlan."Payable Trigger Method" = TriggerMethod then begin
                         if CommRecogEntry."Basis Qty." <= RemQtyToApply then
                             QtyToApply := CommRecogEntry."Basis Qty."
@@ -850,7 +845,7 @@ codeunit 80001 "CommissionPostTigCM"
                             if BasisAmt - AmtApplied <> 0 then begin
                                 CommApprovalEntry."Basis Amt. Approved" += (BasisAmt - AmtApplied);
                                 CommApprovalEntry."Amt. Remaining to Pay" := CommApprovalEntry."Basis Amt. Approved";
-                                CommApprovalEntry.MODIFY;
+                                CommApprovalEntry.Modify();
                             end;
 
                             BasisAmt := 0;
@@ -862,7 +857,7 @@ codeunit 80001 "CommissionPostTigCM"
                         AmtApplied += AmtToApply;
 
                         if RemQtyToApply <> 0 then begin
-                            CommApprovalEntry.INIT;
+                            CommApprovalEntry.Init();
                             CommApprovalEntry."Entry No." := 0;
                             CommApprovalEntry."Entry Type" := CommRecogEntry."Entry Type";
                             CommApprovalEntry."Comm. Recog. Entry No." := CommRecogEntry."Entry No.";
@@ -881,23 +876,23 @@ codeunit 80001 "CommissionPostTigCM"
                             CommApprovalEntry."Commission Plan Code" := CommRecogEntry."Commission Plan Code";
                             CommApprovalEntry."Trigger Method" := TriggerMethod;
                             CommApprovalEntry."Trigger Document No." := TriggerDocNo;
-                            CommApprovalEntry."Released to Pay Date" := WORKDATE;
-                            CommApprovalEntry."Released to Pay By" := USERID;
-                            CommApprovalEntry.INSERT;
+                            CommApprovalEntry."Released to Pay Date" := WorkDate();
+                            CommApprovalEntry."Released to Pay By" := CopyStr(UserId(), 1, 50);
+                            CommApprovalEntry.Insert();
 
                             //Close recognition entry if appropriate
-                            CommRecogEntry.CALCFIELDS("Basis Qty. Approved to Pay");
+                            CommRecogEntry.CalcFields("Basis Qty. Approved to Pay");
                             if ABS(CommRecogEntry."Basis Qty.") - ABS(CommRecogEntry."Basis Qty. Approved to Pay") = 0
                             then begin
-                                CommRecogEntry2.GET(CommRecogEntry."Entry No.");
+                                CommRecogEntry2.Get(CommRecogEntry."Entry No.");
                                 CommRecogEntry2.Open := false;
-                                CommRecogEntry2.MODIFY;
+                                CommRecogEntry2.Modify();
                             end;
                         end;
                     end;
-                until (CommRecogEntry.NEXT = 0) or (RemQtyToApply = 0);
+                until (CommRecogEntry.Next() = 0) or (RemQtyToApply = 0);
             end;
-        until SalesLineTemp.NEXT = 0;
+        until SalesLineTemp.Next() = 0;
     end;
 
     procedure PostCommWorksheet(var CommWkshtLine: Record CommissionWksheetLineTigCM);
@@ -907,63 +902,63 @@ codeunit 80001 "CommissionPostTigCM"
         PurchLineNo: Integer;
         LineAmt: Decimal;
     begin
-        GetCommSetup;
+        GetCommSetup();
         if CommSetup.Disabled then
             exit;
 
-        if not CONFIRM(Text002, false) then
-            ERROR(Text003);
-        ResetCodeunit;
+        if not Confirm(ConfirmPostQst, false) then
+            Error(PostCancelledErr);
+        ResetCodeunit();
         CommWkshtLine2 := CommWkshtLine;
-        CommWkshtLine2.COPYFILTERS(CommWkshtLine);
+        CommWkshtLine2.CopyFilters(CommWkshtLine);
         //Ensure user did not filter on any fields
-        if FORMAT(CommWkshtLine2.GETFILTERS) <> 'Batch Name: ' + FORMAT(CommWkshtLine.GETFILTER("Batch Name"))
+        if FORMAT(CommWkshtLine2.GetFilters()) <> 'Batch Name: ' + FORMAT(CommWkshtLine.GetFilter("Batch Name"))
         then
-            ERROR(Text004);
+            Error(FilteredRecordsErr);
 
         with CommWkshtLine2 do begin
-            CommWkshtLine2.SETCURRENTKEY("Batch Name", "Salesperson Code", "Line No.");
-            if not FINDSET then
-                ERROR(Text001);
+            CommWkshtLine2.SetCurrentKey("Batch Name", "Salesperson Code", "Line No.");
+            if not FindSet() then
+                Error(NothingToPostErr);
 
             //Ensure only a single batch is being posted
             if "Batch Name" = '' then
-                ERROR(Text012);
+                Error(BatchNameErr);
 
             //Check lines
             repeat
-                TESTFIELD("Posting Date");
-                TESTFIELD("Payout Date");
-                TESTFIELD("Customer No.");
-                TESTFIELD("Salesperson Code");
-                TESTFIELD("Commission Plan Code");
-                TESTFIELD("Source Document No.");
-                CommPlanPayee.GET("Commission Plan Code", "Salesperson Code");
+                TestField("Posting Date");
+                TestField("Payout Date");
+                TestField("Customer No.");
+                TestField("Salesperson Code");
+                TestField("Commission Plan Code");
+                TestField("Source Document No.");
+                CommPlanPayee.Get("Commission Plan Code", "Salesperson Code");
                 if CommPlanPayee."Distribution Method" = CommPlanPayee."Distribution Method"::Vendor then begin
                     if CommPlanPayee."Distribution Code" = '' then
-                        ERROR(STRSUBSTNO(Text006, "Commission Plan Code", "Salesperson Code"));
+                        Error(STRSUBSTNO(MissingDistributionErr, "Commission Plan Code", "Salesperson Code"));
                     if CommPlanPayee."Distribution Account No." = '' then
-                        ERROR(STRSUBSTNO(Text007, "Commission Plan Code", "Salesperson Code"));
+                        Error(STRSUBSTNO(MissingAccountErr, "Commission Plan Code", "Salesperson Code"));
                 end;
-            until NEXT = 0;
+            until Next() = 0;
 
             //Post lines
             DocNo := 'TEMP001';
-            FINDSET;
+            FindSet();
             repeat
-                CLEAR(CommPlan);
-                CLEAR(CommApprovalEntry);
-                CommPlan.GET("Commission Plan Code");
-                CommPlanPayee.GET("Commission Plan Code", "Salesperson Code");
-                CALCFIELDS("Customer Name");
+                Clear(CommPlan);
+                Clear(CommApprovalEntry);
+                CommPlan.Get("Commission Plan Code");
+                CommPlanPayee.Get("Commission Plan Code", "Salesperson Code");
+                CalcFields("Customer Name");
 
                 if "System Created" then begin
-                    if not CommApprovalEntry.GET("Comm. Approval Entry No.") then
-                        CLEAR(CommApprovalEntry);
+                    if not CommApprovalEntry.Get("Comm. Approval Entry No.") then
+                        Clear(CommApprovalEntry);
                 end else begin
                     //Create related entries for adjustment lines
                     //Use fake Sales Line as common vehicle
-                    SalesLineTemp.INIT;
+                    SalesLineTemp.Init();
                     SalesLineTemp."Document No." := CommWkshtLine2."Source Document No.";
                     SalesLineTemp."Sell-to Customer No." := CommWkshtLine2."Customer No.";
                     SalesLineTemp.Description := Description;
@@ -983,20 +978,20 @@ codeunit 80001 "CommissionPostTigCM"
                 //one line per payment entry
                 if CommPlanPayee."Distribution Method" = CommPlanPayee."Distribution Method"::Vendor
                 then begin
-                    PurchHeaderTemp.SETRANGE("Buy-from Vendor No.", CommPlanPayee."Distribution Code");
-                    if not PurchHeaderTemp.FINDFIRST then begin
+                    PurchHeaderTemp.SetRange("Buy-from Vendor No.", CommPlanPayee."Distribution Code");
+                    if not PurchHeaderTemp.FindFirst() then begin
                         PurchHeaderTemp."Document Type" := PurchHeaderTemp."Document Type"::Invoice;
                         PurchHeaderTemp."No." := DocNo;
                         PurchHeaderTemp."Buy-from Vendor No." := CommPlanPayee."Distribution Code";
                         PurchHeaderTemp."Document Date" := CommWkshtLine2."Payout Date";
                         PurchHeaderTemp."Posting Date" := CommWkshtLine2."Posting Date";
-                        PurchHeaderTemp.INSERT;
+                        PurchHeaderTemp.Insert();
                         DocNo := INCSTR(DocNo);
                     end;
 
-                    PurchLineTemp.SETRANGE("Document Type", PurchHeaderTemp."Document Type");
-                    PurchLineTemp.SETRANGE("Document No.", PurchHeaderTemp."No.");
-                    if PurchLineTemp.FINDLAST then
+                    PurchLineTemp.SetRange("Document Type", PurchHeaderTemp."Document Type");
+                    PurchLineTemp.SetRange("Document No.", PurchHeaderTemp."No.");
+                    if PurchLineTemp.FindLast() then
                         PurchLineNo := PurchLineTemp."Line No." + 10000
                     else
                         PurchLineNo := 10000;
@@ -1009,7 +1004,7 @@ codeunit 80001 "CommissionPostTigCM"
                     PurchLineTemp."Direct Unit Cost" := Amount;
                     PurchLineTemp.Description := Description;
                     PurchLineTemp."Description 2" := FORMAT("Batch Name") + ': ' + FORMAT("Payout Date");
-                    PurchLineTemp.INSERT;
+                    PurchLineTemp.Insert();
                 end;
 
                 if "System Created" then
@@ -1022,91 +1017,91 @@ codeunit 80001 "CommissionPostTigCM"
                                  CommPlanPayee."Distribution Method",
                                  PurchHeaderTemp."No.",
                                  PurchLineTemp."Line No.");
-            until NEXT = 0;
+            until Next() = 0;
 
-            PurchHeaderTemp.RESET;
-            if PurchHeaderTemp.FINDSET then begin
+            PurchHeaderTemp.Reset();
+            if PurchHeaderTemp.FindSet() then begin
                 repeat
                     //If total is negative change doc type to cr. memo
                     LineAmt := 0;
-                    PurchLineTemp.RESET;
-                    PurchLineTemp.SETRANGE("Document Type", PurchHeaderTemp."Document Type");
-                    PurchLineTemp.SETRANGE("Document No.", PurchHeaderTemp."No.");
-                    PurchLineTemp.FINDSET;
+                    PurchLineTemp.Reset();
+                    PurchLineTemp.SetRange("Document Type", PurchHeaderTemp."Document Type");
+                    PurchLineTemp.SetRange("Document No.", PurchHeaderTemp."No.");
+                    PurchLineTemp.FindSet();
                     repeat
                         LineAmt += PurchLineTemp."Direct Unit Cost";
-                    until PurchLineTemp.NEXT = 0;
+                    until PurchLineTemp.Next() = 0;
 
-                    PurchHeader.INIT;
+                    PurchHeader.Init();
                     if LineAmt < 0 then
-                        PurchHeader.VALIDATE("Document Type", PurchHeader."Document Type"::"Credit Memo")
+                        PurchHeader.Validate("Document Type", PurchHeader."Document Type"::"Credit Memo")
                     else
-                        PurchHeader.VALIDATE("Document Type", PurchHeaderTemp."Document Type");
+                        PurchHeader.Validate("Document Type", PurchHeaderTemp."Document Type");
                     PurchHeader."No." := '';
-                    PurchHeader.INSERT(true);
-                    PurchHeader.VALIDATE("Buy-from Vendor No.", PurchHeaderTemp."Buy-from Vendor No.");
-                    PurchHeader.VALIDATE("Document Date", PurchHeaderTemp."Document Date");
-                    PurchHeader.VALIDATE("Posting Date", PurchHeaderTemp."Posting Date");
+                    PurchHeader.Insert(true);
+                    PurchHeader.Validate("Buy-from Vendor No.", PurchHeaderTemp."Buy-from Vendor No.");
+                    PurchHeader.Validate("Document Date", PurchHeaderTemp."Document Date");
+                    PurchHeader.Validate("Posting Date", PurchHeaderTemp."Posting Date");
                     if LineAmt >= 0 then
                         PurchHeader."Vendor Invoice No." := PurchHeader."No."
                     else
                         PurchHeader."Vendor Cr. Memo No." := PurchHeader."No.";
-                    PurchHeader.MODIFY(true);
+                    PurchHeader.Modify(true);
 
-                    PurchLineTemp.RESET;
-                    PurchLineTemp.SETRANGE("Document Type", PurchHeaderTemp."Document Type");
-                    PurchLineTemp.SETRANGE("Document No.", PurchHeaderTemp."No.");
-                    PurchLineTemp.FINDSET;
+                    PurchLineTemp.Reset();
+                    PurchLineTemp.SetRange("Document Type", PurchHeaderTemp."Document Type");
+                    PurchLineTemp.SetRange("Document No.", PurchHeaderTemp."No.");
+                    PurchLineTemp.FindSet();
                     repeat
-                        PurchLine.INIT;
-                        PurchLine.VALIDATE("Document Type", PurchHeader."Document Type");
-                        PurchLine.VALIDATE("Document No.", PurchHeader."No.");
+                        PurchLine.Init();
+                        PurchLine.Validate("Document Type", PurchHeader."Document Type");
+                        PurchLine.Validate("Document No.", PurchHeader."No.");
                         PurchLine."Line No." := PurchLineTemp."Line No.";
-                        PurchLine.INSERT(true);
-                        PurchLine.VALIDATE(Type, PurchLineTemp.Type);
-                        PurchLine.VALIDATE("No.", PurchLineTemp."No.");
-                        PurchLine.VALIDATE(Quantity, ABS(PurchLineTemp.Quantity));
-                        PurchLine.VALIDATE("Direct Unit Cost", PurchLineTemp."Direct Unit Cost");
+                        PurchLine.Insert(true);
+                        PurchLine.Validate(Type, PurchLineTemp.Type);
+                        PurchLine.Validate("No.", PurchLineTemp."No.");
+                        PurchLine.Validate(Quantity, ABS(PurchLineTemp.Quantity));
+                        PurchLine.Validate("Direct Unit Cost", PurchLineTemp."Direct Unit Cost");
                         PurchLine.Description := PurchLineTemp.Description;
                         PurchLine."Description 2" := PurchLineTemp."Description 2";
-                        PurchLine.MODIFY(true);
+                        PurchLine.Modify(true);
 
                         //Update payment links to the real document no.
-                        CommPmtEntryTemp.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
-                        CommPmtEntryTemp.SETRANGE("Payment Method", CommPmtEntryTemp."Payment Method"::"Check as Vendor");
-                        CommPmtEntryTemp.SETRANGE("Payment Ref. No.", PurchLineTemp."Document No.");
-                        CommPmtEntryTemp.SETRANGE("Payment Ref. Line No.", PurchLineTemp."Line No.");
-                        while CommPmtEntryTemp.FINDFIRST do begin
+                        CommPmtEntryTemp.SetCurrentKey("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
+                        CommPmtEntryTemp.SetRange("Payment Method", CommPmtEntryTemp."Payment Method"::"Check as Vendor");
+                        CommPmtEntryTemp.SetRange("Payment Ref. No.", PurchLineTemp."Document No.");
+                        CommPmtEntryTemp.SetRange("Payment Ref. Line No.", PurchLineTemp."Line No.");
+                        while CommPmtEntryTemp.FindFirst() do begin
                             CommPmtEntryTemp."Payment Ref. No." := PurchLine."Document No.";
                             CommPmtEntryTemp."Payment Ref. Line No." := PurchLine."Line No.";
-                            CommPmtEntryTemp.MODIFY;
+                            CommPmtEntryTemp.Modify();
                         end;
-                    until PurchLineTemp.NEXT = 0;
-                until PurchHeaderTemp.NEXT = 0;
+                    until PurchLineTemp.Next() = 0;
+                until PurchHeaderTemp.Next() = 0;
             end;
 
-            FinalizeEntries;
-            DELETEALL;
-            MESSAGE(Text005);
+            FinalizeEntries();
+            DeleteAll();
+            Message(PostCompleteMsg);
         end;
     end;
 
     local procedure InitCommEntry(var SalesLine: Record "Sales Line"; CommPlanCode: Code[20]; TriggerDocNo2: Code[20]; EntryType2: Option Commission,Clawback,Advance,Adjustment);
     begin
         /*depricate - NOT needed
-        IF NOT CommPlan.GET(CommPlanCode) THEN
-          CLEAR(CommPlan);
+        IF NOT CommPlan.Get(CommPlanCode) THEN
+          Clear(CommPlan);
         IF EntryNo = 0 THEN
           EntryNo := 1;
         
-        CommEntryTemp.INIT;
+        CommEntryTemp.Init();
         CommEntryTemp."User ID" := userid;
         CommEntryTemp."entry no." := EntryNo;
         CommEntryTemp."Entry No." := EntryType2;
         CommEntryTemp."Document Type" := SalesLine."Document Type";
         CommEntryTemp."Customer No." := SalesLine."Document No.";
-        CommEntryTemp."Comm. Plan Code" := WORKDATE;
-        CommEntryTemp."Commission Rate" := USERID;
+        CommEntryTemp."Comm. Plan Code" := WorkDate();
+        CommEntryTemp."Commission Rate" := UserId();
         CommEntryTemp."Customer No." := SalesLine."Sell-to Customer No.";
         CommEntryTemp.Open := TRUE;
         CommEntryTemp."Trigger Method" := CommPlan."Recognition Trigger Method";
@@ -1119,7 +1114,7 @@ codeunit 80001 "CommissionPostTigCM"
           CommEntryTemp."Salesperson Code" := SalesLine.Description;
           CommEntryTemp.Open := FALSE;
         END;
-        CommEntryTemp.INSERT;
+        CommEntryTemp.Insert();
         EntryNo += 1;
         */
 
@@ -1129,10 +1124,10 @@ codeunit 80001 "CommissionPostTigCM"
     begin
         /*depricate - NOT needed
         RecogEntryNo += 1;
-        IF NOT CommPlan.GET(CommPlanCode) THEN
-          CLEAR(CommPlan);
+        IF NOT CommPlan.Get(CommPlanCode) THEN
+          Clear(CommPlan);
         
-        CommRecogEntryTemp.INIT;
+        CommRecogEntryTemp.Init();
         CommRecogEntryTemp."Entry No." := RecogEntryNo;
         CommRecogEntryTemp."Comm. Ledger Entry No." := CommEntryTemp."User ID";
         CommRecogEntryTemp."Entry Type" := CommEntryTemp."Entry No.";
@@ -1148,11 +1143,11 @@ codeunit 80001 "CommissionPostTigCM"
         CommRecogEntryTemp."Commission Plan Code" := CommPlanCode;
         CommRecogEntryTemp."Trigger Method" := CommPlan."Recognition Trigger Method";
         CommRecogEntryTemp."Trigger Document No." := TriggerDocNo2;
-        CommRecogEntryTemp."Creation Date" := WORKDATE;
-        CommRecogEntryTemp."Created By" := USERID;
+        CommRecogEntryTemp."Creation Date" := WorkDate();
+        CommRecogEntryTemp."Created By" := UserId();
         IF CommEntryTemp."Entry No." <> CommEntryTemp."Entry No."::"0" THEN
           CommRecogEntryTemp.Open := FALSE;
-        CommRecogEntryTemp.INSERT;
+        CommRecogEntryTemp.Insert();
         */
 
     end;
@@ -1160,7 +1155,7 @@ codeunit 80001 "CommissionPostTigCM"
     local procedure InitApprovalEntry(CommWkshtLine2: Record CommissionWksheetLineTigCM);
     begin
         ApprEntryNo += 1;
-        CommApprovalEntryTemp.INIT;
+        CommApprovalEntryTemp.Init();
         CommApprovalEntryTemp."Entry No." := ApprEntryNo;
         CommApprovalEntryTemp."Entry Type" := CommRecogEntryTemp."Entry Type";
         CommApprovalEntryTemp."Comm. Recog. Entry No." := CommRecogEntryTemp."Entry No.";
@@ -1182,15 +1177,15 @@ codeunit 80001 "CommissionPostTigCM"
         CommApprovalEntryTemp."Commission Plan Code" := CommRecogEntryTemp."Commission Plan Code";
         CommApprovalEntryTemp."Trigger Method" := CommRecogEntryTemp."Trigger Method";
         CommApprovalEntryTemp."Trigger Document No." := CommRecogEntry."Trigger Document No.";
-        CommApprovalEntryTemp."Released to Pay Date" := WORKDATE;
-        CommApprovalEntryTemp."Released to Pay By" := USERID;
-        CommApprovalEntryTemp.INSERT;
+        CommApprovalEntryTemp."Released to Pay Date" := WorkDate();
+        CommApprovalEntryTemp."Released to Pay By" := CopyStr(UserId(), 1, 50);
+        CommApprovalEntryTemp.Insert();
     end;
 
     local procedure InitPaymentEntry(CommWkshtLine: Record CommissionWksheetLineTigCM; CommApprovalEntry: Record CommApprovalEntryTigCM; DistributionMethod: Option Vendor,External,Manual; PaymentRefNo: Code[20]; PaymentLineNo: Integer);
     begin
         PmtEntryNo += 1;
-        CommPmtEntryTemp.INIT;
+        CommPmtEntryTemp.Init();
         CommPmtEntryTemp."Entry No." := PmtEntryNo;
         CommPmtEntryTemp."Entry Type" := CommWkshtLine."Entry Type";
         CommPmtEntryTemp."Comm. Recog. Entry No." := CommApprovalEntry."Comm. Recog. Entry No.";
@@ -1204,21 +1199,21 @@ codeunit 80001 "CommissionPostTigCM"
         CommPmtEntryTemp.Quantity := CommWkshtLine.Quantity;
         CommPmtEntryTemp.Amount := CommWkshtLine.Amount;
         CommPmtEntryTemp."Customer No." := CommWkshtLine."Customer No.";
-        CommPmtEntryTemp."Created Date" := TODAY;
-        CommPmtEntryTemp."Created By" := USERID;
+        CommPmtEntryTemp."Created Date" := Today();
+        CommPmtEntryTemp."Created By" := CopyStr(UserId(), 1, 50);
         CommPmtEntryTemp."Unit Type" := CommApprovalEntry."Unit Type";
         CommPmtEntryTemp."Unit No." := CommApprovalEntry."Unit No.";
         CommPmtEntryTemp."Commission Plan Code" := CommApprovalEntry."Commission Plan Code";
         CommPmtEntryTemp."Trigger Method" := CommApprovalEntry."Trigger Method";
         CommPmtEntryTemp."Trigger Document No." := CommApprovalEntry."Trigger Document No.";
         CommPmtEntryTemp."Released to Pay" := true;
-        CommPmtEntryTemp."Released to Pay Date" := WORKDATE;
-        CommPmtEntryTemp."Released to Pay By" := USERID;
+        CommPmtEntryTemp."Released to Pay Date" := WorkDate();
+        CommPmtEntryTemp."Released to Pay By" := CopyStr(UserId(), 1, 50);
         CommPmtEntryTemp."Payment Method" := DistributionMethod;
         CommPmtEntryTemp."Payment Ref. No." := PaymentRefNo;
         CommPmtEntryTemp."Payment Ref. Line No." := PaymentLineNo;
         CommPmtEntryTemp.Description := CommWkshtLine.Description;
-        CommPmtEntryTemp.INSERT;
+        CommPmtEntryTemp.Insert();
     end;
 
     local procedure FinalizeEntries();
@@ -1236,47 +1231,47 @@ codeunit 80001 "CommissionPostTigCM"
         //instead we create the pmt. entries directly from
         //the InitPaymentEntry() function.
         /*depricate - NOT needed. Creating entries from history, NOT posting
-        CommEntryTemp.RESET;
-        IF CommEntryTemp.FINDSET THEN BEGIN
+        CommEntryTemp.Reset();
+        IF CommEntryTemp.FindSet() THEN BEGIN
           REPEAT
-            CommEntry.SETCURRENTKEY("Document Type","Customer No.");
-            CommEntry.SETRANGE("Document Type",CommEntryTemp."Document Type");
-            CommEntry.SETRANGE("Customer No.",CommEntryTemp."Customer No.");
-            IF NOT CommEntry.FINDFIRST THEN BEGIN
-              CommEntry.RESET;
+            CommEntry.SetCurrentKey("Document Type","Customer No.");
+            CommEntry.SetRange("Document Type",CommEntryTemp."Document Type");
+            CommEntry.SetRange("Customer No.",CommEntryTemp."Customer No.");
+            IF NOT CommEntry.FindFirst() THEN BEGIN
+              CommEntry.Reset();
               CommEntry.LOCKTABLE;
-              IF CommEntry.FINDLAST THEN
+              IF CommEntry.FindLast() THEN
                 EntryNo := CommEntry."User ID" + 1
               ELSE
                 EntryNo := 1;
               CommEntry := CommEntryTemp;
               CommEntry."User ID" := EntryNo;
-              CommEntry.INSERT;
+              CommEntry.Insert();
             END;
         
             //Related recognition entries
-            CommRecogEntryTemp.RESET;
-            CommRecogEntryTemp.SETRANGE("Comm. Ledger Entry No.",CommEntryTemp."User ID");
-            IF CommRecogEntryTemp.FINDSET THEN BEGIN
+            CommRecogEntryTemp.Reset();
+            CommRecogEntryTemp.SetRange("Comm. Ledger Entry No.",CommEntryTemp."User ID");
+            IF CommRecogEntryTemp.FindSet() THEN BEGIN
               REPEAT
                 CommRecogEntry := CommRecogEntryTemp;
                 CommRecogEntry."Entry No." := 0;
                 CommRecogEntry."Comm. Ledger Entry No." := CommEntry."User ID";
-                CommRecogEntry.INSERT;
+                CommRecogEntry.Insert();
         
                 //Related approval entries
                 //Only has records if called from commission worksheet adjustment lines
-                CommApprovalEntryTemp.RESET;
-                CommApprovalEntryTemp.SETRANGE("Comm. Ledger Entry No.",CommEntryTemp."User ID");
-                CommApprovalEntryTemp.SETRANGE("Comm. Recog. Entry No.",CommRecogEntryTemp."Entry No.");
-                IF CommApprovalEntryTemp.FINDSET THEN BEGIN
+                CommApprovalEntryTemp.Reset();
+                CommApprovalEntryTemp.SetRange("Comm. Ledger Entry No.",CommEntryTemp."User ID");
+                CommApprovalEntryTemp.SetRange("Comm. Recog. Entry No.",CommRecogEntryTemp."Entry No.");
+                IF CommApprovalEntryTemp.FindSet() THEN BEGIN
                   REPEAT
                     CommApprovalEntry := CommApprovalEntryTemp;
                     CommApprovalEntry."Entry No." := 0;
                     CommApprovalEntry."Comm. Ledger Entry No." := CommEntry."User ID";
                     CommApprovalEntry."Comm. Recog. Entry No." := CommRecogEntry."Entry No.";
-                    CommApprovalEntry.INSERT;
-                  UNTIL CommApprovalEntryTemp.NEXT = 0;
+                    CommApprovalEntry.Insert();
+                  UNTIL CommApprovalEntryTemp.Next() = 0;
                 END;
         
                 //Related payment entries
@@ -1284,44 +1279,44 @@ codeunit 80001 "CommissionPostTigCM"
                 //This will only find adjustment lines where the related entries were
                 //created to match on the fly. It will find commission type entries down
                 //further after the comm. entry loop
-                CommPmtEntryTemp.RESET;
-                CommPmtEntryTemp.SETRANGE("Comm. Ledger Entry No.",CommEntryTemp."User ID");
-                CommPmtEntryTemp.SETRANGE("Comm. Recog. Entry No.",CommRecogEntryTemp."Entry No.");
-                CommPmtEntryTemp.SETFILTER("Entry Type",'<>%1',CommPmtEntryTemp."Entry Type"::Commission);
-                IF CommPmtEntryTemp.FINDSET THEN BEGIN
+                CommPmtEntryTemp.Reset();
+                CommPmtEntryTemp.SetRange("Comm. Ledger Entry No.",CommEntryTemp."User ID");
+                CommPmtEntryTemp.SetRange("Comm. Recog. Entry No.",CommRecogEntryTemp."Entry No.");
+                CommPmtEntryTemp.SetFilter("Entry Type",'<>%1',CommPmtEntryTemp."Entry Type"::Commission);
+                IF CommPmtEntryTemp.FindSet() THEN BEGIN
                   REPEAT
                     CommPmtEntry := CommPmtEntryTemp;
                     CommPmtEntry."Entry No." := 0;
                     CommPmtEntry."Comm. Ledger Entry No." := CommEntry."User ID";
                     CommPmtEntry."Comm. Recog. Entry No." := CommRecogEntry."Entry No.";
-                    CommPmtEntry.INSERT;
-                  UNTIL CommPmtEntryTemp.NEXT = 0;
+                    CommPmtEntry.Insert();
+                  UNTIL CommPmtEntryTemp.Next() = 0;
                 END;
-              UNTIL CommRecogEntryTemp.NEXT = 0;
+              UNTIL CommRecogEntryTemp.Next() = 0;
             END;
-          UNTIL CommEntryTemp.NEXT = 0;
+          UNTIL CommEntryTemp.Next() = 0;
         END;
         */
 
         //Only has records if called from commission worksheet for adjustment lines
         //and will ONLY find entries NOT in the filtered loop above
-        CommPmtEntryTemp.RESET;
-        CommPmtEntryTemp.SETRANGE("Entry Type", CommPmtEntryTemp."Entry Type"::Commission);
-        if CommPmtEntryTemp.FINDSET then begin
+        CommPmtEntryTemp.Reset();
+        CommPmtEntryTemp.SetRange("Entry Type", CommPmtEntryTemp."Entry Type"::Commission);
+        if CommPmtEntryTemp.FindSet() then begin
             repeat
                 CommPmtEntry := CommPmtEntryTemp;
                 CommPmtEntry."Entry No." := 0;
-                CommPmtEntry.INSERT;
+                CommPmtEntry.Insert();
 
                 //xxx done somewhere else?
-                CommApprovalEntry.GET(CommPmtEntry."Comm. Appr. Entry No.");
-                //CommApprovalEntry.CALCFIELDS("Amt. Paid");
+                CommApprovalEntry.Get(CommPmtEntry."Comm. Appr. Entry No.");
+                //CommApprovalEntry.CalcFields("Amt. Paid");
                 //CommApprovalEntry."Amt. Remaining to Pay" :=
                 //                  CommApprovalEntry."Basis Amt. Approved" - CommApprovalEntry."Amt. Paid";
                 CommApprovalEntry."Qty. Paid" := CommApprovalEntry."Basis Qty. Approved";
                 CommApprovalEntry.Open := false;
-                CommApprovalEntry.MODIFY;
-            until CommPmtEntryTemp.NEXT = 0;
+                CommApprovalEntry.Modify();
+            until CommPmtEntryTemp.Next() = 0;
         end;
 
     end;
@@ -1332,16 +1327,17 @@ codeunit 80001 "CommissionPostTigCM"
         if not RunTrigger then
             exit;
 
-        GetCommSetup;
+        GetCommSetup();
 
         if CommSetup."Recog. Trigger Method" = CommSetup."Recog. Trigger Method"::Shipment then begin
-            if Rec."Commission Calculated" < Rec."Commission Calculated"::"1" then
-                ERROR(Text013);
+            //FIXME Commission Calculated is not an option type field
+            //if Rec.CommissionCalculatedTigCM < Rec.CommissionCalculatedTigCM::"1" then
+            //    Error(ProcessingIncompleteErr);
         end;
 
         if CommSetup."Payable Trigger Method" = CommSetup."Payable Trigger Method"::Shipment then begin
-            if not Rec."Commission Calculated" then
-                ERROR(Text013);
+            if not Rec.CommissionCalculatedTigCM then
+                Error(ProcessingIncompleteErr);
         end;
     end;
 
@@ -1351,16 +1347,16 @@ codeunit 80001 "CommissionPostTigCM"
         if not RunTrigger then
             exit;
 
-        GetCommSetup;
+        GetCommSetup();
 
         if CommSetup."Recog. Trigger Method" = CommSetup."Recog. Trigger Method"::Invoice then begin
-            if not Rec."Commission Calculated" then
-                ERROR(Text013);
+            if not Rec.CommissionCalculatedTigCM then
+                Error(ProcessingIncompleteErr);
         end;
 
         if CommSetup."Payable Trigger Method" = CommSetup."Payable Trigger Method"::Invoice then begin
-            if not Rec."Commission Calculated" then
-                ERROR(Text013);
+            if not Rec.CommissionCalculatedTigCM then
+                Error(ProcessingIncompleteErr);
         end;
     end;
 
@@ -1370,16 +1366,16 @@ codeunit 80001 "CommissionPostTigCM"
         if not RunTrigger then
             exit;
 
-        GetCommSetup;
+        GetCommSetup();
 
         if CommSetup."Recog. Trigger Method" = CommSetup."Recog. Trigger Method"::Invoice then begin
-            if not Rec."Commission Calculated" then
-                ERROR(Text013);
+            if not Rec.CommissionCalculatedTigCM then
+                Error(ProcessingIncompleteErr);
         end;
 
         if CommSetup."Payable Trigger Method" = CommSetup."Payable Trigger Method"::Invoice then begin
-            if not Rec."Commission Calculated" then
-                ERROR(Text013);
+            if not Rec.CommissionCalculatedTigCM then
+                Error(ProcessingIncompleteErr);
         end;
     end;
 }
