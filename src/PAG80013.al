@@ -4,7 +4,7 @@ page 80013 "Comm. Recognition Entries"
 
     Editable = false;
     PageType = List;
-    SourceTable = "Comm. Recognition Entry";
+    SourceTable = CommRecognitionEntryTigCM;
 
     layout
     {
@@ -12,82 +12,82 @@ page 80013 "Comm. Recognition Entries"
         {
             repeater(Group)
             {
-                field("Entry Type";"Entry Type")
+                field("Entry Type"; "Entry Type")
                 {
                 }
-                field("Item Ledger Entry No.";"Item Ledger Entry No.")
+                field("Item Ledger Entry No."; "Item Ledger Entry No.")
                 {
                 }
-                field("Document No.";"Document No.")
+                field("Document No."; "Document No.")
                 {
                 }
-                field("Customer No.";"Customer No.")
+                field("Customer No."; "Customer No.")
                 {
                 }
-                field("Unit Type";"Unit Type")
+                field("Unit Type"; "Unit Type")
                 {
                 }
-                field("Unit No.";"Unit No.")
+                field("Unit No."; "Unit No.")
                 {
                 }
-                field("Basis Qty.";"Basis Qty.")
+                field("Basis Qty."; "Basis Qty.")
                 {
                 }
-                field("Basis Amt.";"Basis Amt.")
+                field("Basis Amt."; "Basis Amt.")
                 {
                 }
-                field("Basis Qty. Approved to Pay";"Basis Qty. Approved to Pay")
+                field("Basis Qty. Approved to Pay"; "Basis Qty. Approved to Pay")
                 {
                 }
-                field("Basis Amt. Approved to Pay";"Basis Amt. Approved to Pay")
+                field("Basis Amt. Approved to Pay"; "Basis Amt. Approved to Pay")
                 {
                 }
-                field("Basis Qty. Paid";"Basis Qty. Paid")
+                field("Basis Qty. Paid"; "Basis Qty. Paid")
                 {
                 }
-                field("Basis Amt. Paid";"Basis Amt. Paid")
+                field("Basis Amt. Paid"; "Basis Amt. Paid")
                 {
                 }
-                field("Basis Qty. Remaining";"Basis Qty. Remaining")
+                field("Basis Qty. Remaining"; "Basis Qty. Remaining")
                 {
                 }
-                field("Basis Amt. Remaining";"Basis Amt. Remaining")
+                field("Basis Amt. Remaining"; "Basis Amt. Remaining")
                 {
                 }
-                field(Open;Open)
+                field(Open; Open)
                 {
                 }
-                field("Document Line No.";"Document Line No.")
+                field("Document Line No."; "Document Line No.")
                 {
                 }
-                field("Trigger Method";"Trigger Method")
+                field("Trigger Method"; "Trigger Method")
                 {
                 }
-                field("Trigger Document No.";"Trigger Document No.")
+                field("Trigger Document No."; "Trigger Document No.")
                 {
                 }
-                field("Trigger Posting Date";"Trigger Posting Date")
+                field("Trigger Posting Date"; "Trigger Posting Date")
                 {
                 }
-                field("Creation Date";"Creation Date")
+                field("Creation Date"; "Creation Date")
                 {
                 }
-                field("Created By";"Created By")
+                field("Created By"; "Created By")
                 {
                 }
-                field("External Document No.";"External Document No.")
+                field("External Document No."; "External Document No.")
                 {
                 }
-                field(Description;Description)
+                field(Description; Description)
                 {
                 }
-                field("Description 2";"Description 2")
+                field("Description 2"; "Description 2")
                 {
                 }
-                field("Reason Code";"Reason Code")
+                field("Reason Code"; "Reason Code")
                 {
                 }
-                field("Entry No.";"Entry No.")
+                field("Entry No."; "Entry No.")
                 {
                 }
             }

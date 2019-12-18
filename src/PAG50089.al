@@ -10,7 +10,7 @@ page 50089 "Comm. Setup Summary"
     ModifyAllowed = false;
     PageType = List;
     SaveValues = true;
-    SourceTable = "Commission Setup Summary";
+    SourceTable = CommissionSetupSummaryTigCM;
 
     layout
     {
@@ -18,25 +18,25 @@ page 50089 "Comm. Setup Summary"
         {
             repeater(Group)
             {
-                field("Customer No.";"Customer No.")
+                field("Customer No."; "Customer No.")
                 {
                 }
-                field("Customer Name";"Customer Name")
+                field("Customer Name"; "Customer Name")
                 {
                 }
-                field("Cust. Salesperson Code";"Cust. Salesperson Code")
+                field("Cust. Salesperson Code"; "Cust. Salesperson Code")
                 {
                 }
-                field("Pay Salesperson Code";"Pay Salesperson Code")
+                field("Pay Salesperson Code"; "Pay Salesperson Code")
                 {
                 }
-                field("Salesperson Name";"Salesperson Name")
+                field("Salesperson Name"; "Salesperson Name")
                 {
                 }
-                field("Comm. Plan Code";"Comm. Plan Code")
+                field("Comm. Plan Code"; "Comm. Plan Code")
                 {
                 }
-                field("Commission Rate";"Commission Rate")
+                field("Commission Rate"; "Commission Rate")
                 {
                 }
             }
@@ -54,7 +54,7 @@ page 50089 "Comm. Setup Summary"
 
                 trigger OnAction();
                 var
-                    CreateCommEntries : Codeunit "Create Comm. Entries From Hist";
+                    CreateCommEntries: Codeunit CreateCommEntriesFromHistTigCM;
                 begin
                     CreateCommEntries.CalcSetupSummary(Rec);
                     CurrPage.UPDATE(false);
@@ -67,7 +67,7 @@ page 50089 "Comm. Setup Summary"
     trigger OnOpenPage();
     begin
         RESET;
-        SETRANGE("User ID",USERID);
+        SETRANGE("User ID", USERID);
     end;
 }
 

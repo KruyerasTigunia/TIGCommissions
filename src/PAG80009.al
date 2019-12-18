@@ -5,7 +5,7 @@ page 80009 "Commission Vendor Groups"
     // TIGCOMM1.0 Commissions
 
     PageType = List;
-    SourceTable = "Commission Vendor Group";
+    SourceTable = CommissionVendorGroupTigCM;
 
     layout
     {
@@ -13,10 +13,10 @@ page 80009 "Commission Vendor Groups"
         {
             repeater(Group)
             {
-                field("Code";Code)
+                field("Code"; Code)
                 {
                 }
-                field(Description;Description)
+                field(Description; Description)
                 {
                 }
             }

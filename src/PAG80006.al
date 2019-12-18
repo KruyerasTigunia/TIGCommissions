@@ -6,7 +6,7 @@ page 80006 "Commission Unit Groups"
 
     PageType = List;
     PromotedActionCategories = 'Manage,Functions,Update,Post,Print,Related Information,f';
-    SourceTable = "Commission Unit Group";
+    SourceTable = CommissionUnitGroupTigCM;
 
     layout
     {
@@ -14,10 +14,10 @@ page 80006 "Commission Unit Groups"
         {
             repeater(Group)
             {
-                field("Code";Code)
+                field("Code"; Code)
                 {
                 }
-                field(Description;Description)
+                field(Description; Description)
                 {
                 }
             }
@@ -33,7 +33,7 @@ page 80006 "Commission Unit Groups"
                 //The property 'PromotedIsBig' can only be set if the property 'Promoted' is set to 'true'
                 //PromotedIsBig = true;
                 RunObject = Page "Commission Unit Group Members";
-                RunPageLink = "Group Code"=FIELD(Code);
+                RunPageLink = "Group Code" = FIELD(Code);
             }
         }
     }

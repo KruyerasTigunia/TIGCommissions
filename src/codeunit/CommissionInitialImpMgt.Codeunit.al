@@ -1,16 +1,16 @@
 codeunit 50007 "CommissionInitialImpMgtTigCM"
 {
     var
-        CommSetup: Record "Commission Setup";
-        CommPlan: Record "Commission Plan";
-        CommPlanPayee: Record "Commission Plan Payee";
-        CommPlanCalcLine: Record "Commission Plan Calculation";
-        CommCustGroup: Record "Commission Customer Group";
-        CommCustGroupMember: Record "Commission Cust. Group Member";
-        CommCustSalesperson: Record "Commission Cust/Salesperson";
+        CommSetup: Record CommissionSetupTigCM;
+        CommPlan: Record CommissionPlanTigCM;
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
+        CommPlanCalcLine: Record CommissionPlanCalculationTigCM;
+        CommCustGroup: Record CommissionCustomerGroupTigCM;
+        CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
+        CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
         Customer: Record Customer;
         Salesperson: Record "Salesperson/Purchaser";
-        CommWizardStep: Record "Comm. Wizard Step";
+        CommWizardStep: Record CommWizardStepTigCM;
         Vendor: Record Vendor;
         HasCommSetup: Boolean;
         Text001: Label 'Setup Wizard has already been run.';

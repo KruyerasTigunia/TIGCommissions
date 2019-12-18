@@ -17,19 +17,19 @@ codeunit 80001 "CommissionPostTigCM"
     end;
 
     var
-        CommSetup: Record "Commission Setup";
+        CommSetup: Record CommissionSetupTigCM;
         SalesLineTemp: Record "Sales Line" temporary;
-        CommEntry: Record "Commission Setup Summary";
-        CommEntryTemp: Record "Commission Setup Summary" temporary;
-        CommRecogEntry: Record "Comm. Recognition Entry";
+        CommEntry: Record CommissionSetupSummaryTigCM;
+        CommEntryTemp: Record CommissionSetupSummaryTigCM temporary;
+        CommRecogEntry: Record CommRecognitionEntryTigCM;
         RecognitionText: Label 'Recognition of %1 %2';
-        CommRecogEntryTemp: Record "Comm. Recognition Entry" temporary;
-        CommApprovalEntry: Record "Comm. Approval Entry";
-        CommApprovalEntryTemp: Record "Comm. Approval Entry" temporary;
-        CommPmtEntry: Record "Comm. Payment Entry";
-        CommPmtEntryTemp: Record "Comm. Payment Entry" temporary;
-        CommPlan: Record "Commission Plan";
-        CommPlanPayee: Record "Commission Plan Payee";
+        CommRecogEntryTemp: Record CommRecognitionEntryTigCM temporary;
+        CommApprovalEntry: Record CommApprovalEntryTigCM;
+        CommApprovalEntryTemp: Record CommApprovalEntryTigCM temporary;
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        CommPmtEntryTemp: Record CommissionPaymentEntryTigCM temporary;
+        CommPlan: Record CommissionPlanTigCM;
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
         PurchHeader: Record "Purchase Header";
         PurchLine: Record "Purchase Line";
         PurchHeaderTemp: Record "Purchase Header" temporary;
@@ -66,10 +66,10 @@ codeunit 80001 "CommissionPostTigCM"
         end;
     end;
 
-    local procedure GetCustPlans(var CommPlanTemp: Record "Commission Plan" temporary; CustomerNo: Code[20]): Boolean;
+    local procedure GetCustPlans(var CommPlanTemp: Record CommissionPlanTigCM temporary; CustomerNo: Code[20]): Boolean;
     var
-        CommPlan: Record "Commission Plan";
-        CommCustGroupMember: Record "Commission Cust. Group Member";
+        CommPlan: Record CommissionPlanTigCM;
+        CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
     begin
         CommPlan.SETCURRENTKEY("Source Type", "Source Method", "Source Method Code");
         CommPlan.SETRANGE("Source Type", CommPlan."Source Type"::Customer);
@@ -158,10 +158,10 @@ codeunit 80001 "CommissionPostTigCM"
         exit(CommPlanTemp.COUNT > 0);
     end;
 
-    local procedure GetItemPlan(CustCommPlanTemp: Record "Commission Plan" temporary; var SalesLine: Record "Sales Line"; var CommPlanCode: Code[20]): Boolean;
+    local procedure GetItemPlan(CustCommPlanTemp: Record CommissionPlanTigCM temporary; var SalesLine: Record "Sales Line"; var CommPlanCode: Code[20]): Boolean;
     var
-        CommPlan: Record "Commission Plan";
-        CommUnitGroupMember: Record "Commission Unit Group Member";
+        CommPlan: Record CommissionPlanTigCM;
+        CommUnitGroupMember: Record CommissionUnitGroupMemberTigCM;
     begin
         //Only include customer plans that apply to the item
         //More than 1 plan may apply. Use the most specific matching one first
@@ -202,7 +202,7 @@ codeunit 80001 "CommissionPostTigCM"
 
     local procedure CustomerInGroup(CommGroupCode: Code[20]; CustomerNo: Code[20]): Boolean;
     var
-        CommCustGroupMember: Record "Commission Cust. Group Member";
+        CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
     begin
         CommCustGroupMember.SETRANGE("Group Code", CommGroupCode);
         CommCustGroupMember.SETRANGE("Customer No.", CustomerNo);
@@ -211,7 +211,7 @@ codeunit 80001 "CommissionPostTigCM"
 
     local procedure PlanHasPayees(CommPlanCode2: Code[20]): Boolean;
     var
-        CommPlanPayee: Record "Commission Plan Payee";
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
     begin
         CommPlanPayee.SETRANGE("Commission Plan Code", CommPlanCode2);
         CommPlanPayee.SETFILTER("Salesperson Code", '<>%1', '');
@@ -241,7 +241,7 @@ codeunit 80001 "CommissionPostTigCM"
     [EventSubscriber(ObjectType::Table, 38, 'OnBeforeDeleteEvent', '', false, false)]
     procedure OnPurchHeaderDelete(var Rec: Record "Purchase Header"; RunTrigger: Boolean);
     var
-        CommPmtEntry: Record "Comm. Payment Entry";
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
     begin
         if not RunTrigger then
             exit;
@@ -262,7 +262,7 @@ codeunit 80001 "CommissionPostTigCM"
     [EventSubscriber(ObjectType::Table, 39, 'OnBeforeModifyEvent', '', false, false)]
     procedure OnPurchLineModify(var Rec: Record "Purchase Line"; var xRec: Record "Purchase Line"; RunTrigger: Boolean);
     var
-        CommPmtEntry: Record "Comm. Payment Entry";
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
     begin
         if not RunTrigger then
             exit;
@@ -281,9 +281,9 @@ codeunit 80001 "CommissionPostTigCM"
     [EventSubscriber(ObjectType::Table, 39, 'OnBeforeDeleteEvent', '', false, false)]
     local procedure OnDeletePOLine(var Rec: Record "Purchase Line"; RunTrigger: Boolean);
     var
-        CommPmtEntry: Record "Comm. Payment Entry";
-        CommApprovalEntry: Record "Comm. Approval Entry";
-        CommRecogEntry: Record "Comm. Recognition Entry";
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        CommApprovalEntry: Record CommApprovalEntryTigCM;
+        CommRecogEntry: Record CommRecognitionEntryTigCM;
     begin
         if not RunTrigger then
             exit;
@@ -313,9 +313,9 @@ codeunit 80001 "CommissionPostTigCM"
     [EventSubscriber(ObjectType::Codeunit, 90, 'OnAfterPostPurchaseDoc', '', false, false)]
     local procedure UpdateCommPmtEntryPosted(var PurchaseHeader: Record "Purchase Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; PurchRcpHdrNo: Code[20]; RetShptHdrNo: Code[20]; PurchInvHdrNo: Code[20]; PurchCrMemoHdrNo: Code[20]);
     var
-        CommPmtEntry: Record "Comm. Payment Entry";
-        CommPmtEntry2: Record "Comm. Payment Entry";
-        CommApprovalEntry: Record "Comm. Approval Entry";
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        CommPmtEntry2: Record CommissionPaymentEntryTigCM;
+        CommApprovalEntry: Record CommApprovalEntryTigCM;
     begin
         //Update Comm. Pmt. Entry, related Comm. Appr. Entry, and flag to prevent deletion
         CommPmtEntry.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
@@ -492,7 +492,7 @@ codeunit 80001 "CommissionPostTigCM"
 
     procedure CheckOKToRecognize(TriggerMethod: Option Booking,Shipment,Invoice,Payment,,,Credit): Boolean;
     var
-        CommPlanTemp: Record "Commission Plan" temporary;
+        CommPlanTemp: Record CommissionPlanTigCM temporary;
         SalesLineTemp2: Record "Sales Line" temporary;
         CommPlanCode: Code[20];
     begin
@@ -621,7 +621,7 @@ codeunit 80001 "CommissionPostTigCM"
     local procedure CheckApproveToPayPartPmt();
     var
         DetCustLedgEntry: Record "Detailed Cust. Ledg. Entry";
-        CommRecogEntry2: Record "Comm. Recognition Entry";
+        CommRecogEntry2: Record CommRecognitionEntryTigCM;
         RemAmtToApply: Decimal;
         AmtToApply: Decimal;
         QtyToApply: Decimal;
@@ -779,9 +779,9 @@ codeunit 80001 "CommissionPostTigCM"
 
     procedure CheckApproveToPay(TriggerMethod: Option Booking,Shipment,Invoice,Payment,,,Credit): Boolean;
     var
-        CommPlanTemp: Record "Commission Plan" temporary;
-        CommRecogEntry2: Record "Comm. Recognition Entry";
-        CommApprovalEntry2: Record "Comm. Approval Entry";
+        CommPlanTemp: Record CommissionPlanTigCM temporary;
+        CommRecogEntry2: Record CommRecognitionEntryTigCM;
+        CommApprovalEntry2: Record CommApprovalEntryTigCM;
         CommPlanCode: Code[20];
         QtyToApply: Decimal;
         RemQtyToApply: Decimal;
@@ -900,9 +900,9 @@ codeunit 80001 "CommissionPostTigCM"
         until SalesLineTemp.NEXT = 0;
     end;
 
-    procedure PostCommWorksheet(var CommWkshtLine: Record "Comm. Worksheet Line");
+    procedure PostCommWorksheet(var CommWkshtLine: Record CommissionWksheetLineTigCM);
     var
-        CommWkshtLine2: Record "Comm. Worksheet Line";
+        CommWkshtLine2: Record CommissionWksheetLineTigCM;
         DocNo: Code[20];
         PurchLineNo: Integer;
         LineAmt: Decimal;
@@ -1157,7 +1157,7 @@ codeunit 80001 "CommissionPostTigCM"
 
     end;
 
-    local procedure InitApprovalEntry(CommWkshtLine2: Record "Comm. Worksheet Line");
+    local procedure InitApprovalEntry(CommWkshtLine2: Record CommissionWksheetLineTigCM);
     begin
         ApprEntryNo += 1;
         CommApprovalEntryTemp.INIT;
@@ -1187,7 +1187,7 @@ codeunit 80001 "CommissionPostTigCM"
         CommApprovalEntryTemp.INSERT;
     end;
 
-    local procedure InitPaymentEntry(CommWkshtLine: Record "Comm. Worksheet Line"; CommApprovalEntry: Record "Comm. Approval Entry"; DistributionMethod: Option Vendor,External,Manual; PaymentRefNo: Code[20]; PaymentLineNo: Integer);
+    local procedure InitPaymentEntry(CommWkshtLine: Record CommissionWksheetLineTigCM; CommApprovalEntry: Record CommApprovalEntryTigCM; DistributionMethod: Option Vendor,External,Manual; PaymentRefNo: Code[20]; PaymentLineNo: Integer);
     begin
         PmtEntryNo += 1;
         CommPmtEntryTemp.INIT;

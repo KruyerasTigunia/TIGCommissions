@@ -1,4 +1,4 @@
-table 80003 "Commission Customer Group"
+table 80003 "CommissionCustomerGroupTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,17 +7,17 @@ table 80003 "Commission Customer Group"
 
     fields
     {
-        field(10;"Code";Code[20])
+        field(10; "Code"; Code[20])
         {
         }
-        field(20;Description;Text[50])
+        field(20; Description; Text[50])
         {
         }
     }
 
     keys
     {
-        key(Key1;"Code")
+        key(Key1; "Code")
         {
         }
     }
@@ -28,11 +28,11 @@ table 80003 "Commission Customer Group"
 
     trigger OnDelete();
     begin
-        CommCustGroupMember.SETRANGE("Group Code",Code);
+        CommCustGroupMember.SETRANGE("Group Code", Code);
         CommCustGroupMember.DELETEALL(true);
     end;
 
     var
-        CommCustGroupMember : Record "Commission Cust. Group Member";
+        CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
 }
 

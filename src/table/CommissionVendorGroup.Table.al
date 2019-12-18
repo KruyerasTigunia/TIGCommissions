@@ -1,4 +1,4 @@
-table 80009 "Commission Vendor Group"
+table 80009 "CommissionVendorGroupTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,18 +7,18 @@ table 80009 "Commission Vendor Group"
 
     fields
     {
-        field(10;"Code";Code[20])
+        field(10; "Code"; Code[20])
         {
         }
-        field(20;Description;Text[50])
+        field(20; Description; Text[50])
         {
-            TableRelation = "Commission Unit Group";
+            TableRelation = CommissionUnitGroupTigCM;
         }
     }
 
     keys
     {
-        key(Key1;"Code")
+        key(Key1; "Code")
         {
         }
     }

@@ -1,12 +1,12 @@
 codeunit 80000 "CalculateCommissionTigCM"
 {
     var
-        CommPlan: Record "Commission Plan";
-        CommPlanCalc: Record "Commission Plan Calculation";
-        CommPlanPayee: Record "Commission Plan Payee";
-        CommCustSalesperson: Record "Commission Cust/Salesperson";
-        CommWkshtLine: Record "Comm. Worksheet Line";
-        CommRecogEntry: Record "Comm. Recognition Entry";
+        CommPlan: Record CommissionPlanTigCM;
+        CommPlanCalc: Record CommissionPlanCalculationTigCM;
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
+        CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
+        CommWkshtLine: Record CommissionWksheetLineTigCM;
+        CommRecogEntry: Record CommRecognitionEntryTigCM;
         Salesperson: Record "Salesperson/Purchaser";
         CalcCommAmt: Decimal;
         PendingCommAmt: Decimal;
@@ -31,7 +31,7 @@ codeunit 80000 "CalculateCommissionTigCM"
         Salesperson.RESET;
     end;
 
-    procedure CalculateCommission(var CommApprovalEntry: Record "Comm. Approval Entry"; BatchName2: Code[20]);
+    procedure CalculateCommission(var CommApprovalEntry: Record CommApprovalEntryTigCM; BatchName2: Code[20]);
     begin
         CommPlan.GET(CommApprovalEntry."Commission Plan Code");
         BatchName := BatchName2;
@@ -121,7 +121,7 @@ codeunit 80000 "CalculateCommissionTigCM"
         end;
     end;
 
-    local procedure InsertCommWkshtLine(CommApprovalEntry: Record "Comm. Approval Entry"; CommAmt: Decimal; BasisAmtSplit: Decimal; SalespersonCode: Code[20]);
+    local procedure InsertCommWkshtLine(CommApprovalEntry: Record CommApprovalEntryTigCM; CommAmt: Decimal; BasisAmtSplit: Decimal; SalespersonCode: Code[20]);
     begin
         with CommWkshtLine do begin
             INIT;

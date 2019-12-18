@@ -1,4 +1,4 @@
-table 80007 "Commission Cust. Group Member"
+table 80007 "CommCustomerGroupMemberTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,17 +7,17 @@ table 80007 "Commission Cust. Group Member"
 
     fields
     {
-        field(10;"Group Code";Code[20])
+        field(10; "Group Code"; Code[20])
         {
-            TableRelation = "Commission Customer Group";
+            TableRelation = CommissionCustomerGroupTigCM;
         }
-        field(20;"Customer No.";Code[20])
+        field(20; "Customer No."; Code[20])
         {
             TableRelation = Customer;
         }
-        field(200;"Customer Name";Text[50])
+        field(200; "Customer Name"; Text[50])
         {
-            CalcFormula = Lookup(Customer.Name WHERE ("No."=FIELD("Customer No.")));
+            CalcFormula = Lookup (Customer.Name WHERE("No." = FIELD("Customer No.")));
             Editable = false;
             FieldClass = FlowField;
         }
@@ -25,10 +25,10 @@ table 80007 "Commission Cust. Group Member"
 
     keys
     {
-        key(Key1;"Group Code","Customer No.")
+        key(Key1; "Group Code", "Customer No.")
         {
         }
-        key(Key2;"Customer No.")
+        key(Key2; "Customer No.")
         {
         }
     }

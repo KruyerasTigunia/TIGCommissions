@@ -8,7 +8,7 @@ page 80014 "Commission Worksheet"
     PageType = Worksheet;
     PromotedActionCategories = 'Manage,Functions,Update,Post,Print,e,f';
     SaveValues = true;
-    SourceTable = "Comm. Worksheet Line";
+    SourceTable = CommissionWksheetLineTigCM;
 
     layout
     {
@@ -16,7 +16,7 @@ page 80014 "Commission Worksheet"
         {
             group(Options)
             {
-                field(BatchName;BatchName)
+                field(BatchName; BatchName)
                 {
                     Caption = 'Batch Name';
 
@@ -28,27 +28,16 @@ page 80014 "Commission Worksheet"
             }
             repeater(Control1000000001)
             {
-                field("Entry Type";"Entry Type")
+                field("Entry Type"; "Entry Type")
                 {
                 }
-                field("Posting Date";"Posting Date")
+                field("Posting Date"; "Posting Date")
                 {
                 }
-                field("Payout Date";"Payout Date")
+                field("Payout Date"; "Payout Date")
                 {
                 }
-                field("Customer No.";"Customer No.")
-                {
-
-                    trigger OnValidate();
-                    begin
-                        CurrPage.UPDATE;
-                    end;
-                }
-                field("Customer Name";"Customer Name")
-                {
-                }
-                field("Salesperson Code";"Salesperson Code")
+                field("Customer No."; "Customer No.")
                 {
 
                     trigger OnValidate();
@@ -56,28 +45,39 @@ page 80014 "Commission Worksheet"
                         CurrPage.UPDATE;
                     end;
                 }
-                field("Salesperson Name";"Salesperson Name")
+                field("Customer Name"; "Customer Name")
                 {
                 }
-                field("Source Document No.";"Source Document No.")
+                field("Salesperson Code"; "Salesperson Code")
+                {
+
+                    trigger OnValidate();
+                    begin
+                        CurrPage.UPDATE;
+                    end;
+                }
+                field("Salesperson Name"; "Salesperson Name")
                 {
                 }
-                field("Trigger Document No.";"Trigger Document No.")
+                field("Source Document No."; "Source Document No.")
                 {
                 }
-                field(Description;Description)
+                field("Trigger Document No."; "Trigger Document No.")
                 {
                 }
-                field(Amount;Amount)
+                field(Description; Description)
                 {
                 }
-                field("Comm. Approval Entry No.";"Comm. Approval Entry No.")
+                field(Amount; Amount)
                 {
                 }
-                field("Basis Amt. (Split)";"Basis Amt. (Split)")
+                field("Comm. Approval Entry No."; "Comm. Approval Entry No.")
                 {
                 }
-                field("Commission Plan Code";"Commission Plan Code")
+                field("Basis Amt. (Split)"; "Basis Amt. (Split)")
+                {
+                }
+                field("Commission Plan Code"; "Commission Plan Code")
                 {
                 }
             }
@@ -107,7 +107,7 @@ page 80014 "Commission Worksheet"
 
                 trigger OnAction();
                 var
-                    SuggestComm : Report "Suggest Commissions";
+                    SuggestComm: Report SuggestCommissionsTigCM;
                 begin
                     CLEAR(SuggestComm);
                     SuggestComm.SetBatch(BatchName);
@@ -166,10 +166,10 @@ page 80014 "Commission Worksheet"
 
                 trigger OnAction();
                 var
-                    CommWkshtLine : Record "Comm. Worksheet Line";
-                    CommToExcel : Report "Commission Wksht. to Excel";
+                    CommWkshtLine: Record CommissionWksheetLineTigCM;
+                    CommToExcel: Report CommissionWkshttoExcelTigCM;
                 begin
-                    CommWkshtLine.SETRANGE("Batch Name",BatchName);
+                    CommWkshtLine.SETRANGE("Batch Name", BatchName);
                     CLEAR(CommToExcel);
                     CommToExcel.SetSourceWorksheet(CommWkshtLine);
                     CommToExcel.RUNMODAL;
@@ -182,57 +182,57 @@ page 80014 "Commission Worksheet"
     begin
         CommSetup.GET;
         if CommSetup.Disabled then
-          ERROR(Text005);
+            ERROR(Text005);
 
         ValidateBatchName(BatchName)
     end;
 
     var
-        CommSetup : Record "Commission Setup";
-        CommFunctions : Codeunit "Calculate Commission";
-        BatchName : Code[20];
-        Text001 : Label 'Are you sure you want to delete all lines?';
-        Text002 : Label 'Are you sure you want to delete the selected line(s)?';
-        Text003 : Label 'Cancelled.';
-        Text004 : Label 'You must specify a Batch Name before making an adjustment.';
-        Text005 : Label 'The Commission Add-on is disabled';
+        CommSetup: Record CommissionSetupTigCM;
+        CommFunctions: Codeunit CalculateCommissionTigCM;
+        BatchName: Code[20];
+        Text001: Label 'Are you sure you want to delete all lines?';
+        Text002: Label 'Are you sure you want to delete the selected line(s)?';
+        Text003: Label 'Cancelled.';
+        Text004: Label 'You must specify a Batch Name before making an adjustment.';
+        Text005: Label 'The Commission Add-on is disabled';
 
-    local procedure ValidateBatchName(NewBatchName : Code[20]);
+    local procedure ValidateBatchName(NewBatchName: Code[20]);
     begin
         if NewBatchName = '' then
-          SETRANGE("Batch Name")
+            SETRANGE("Batch Name")
         else
-          SETRANGE("Batch Name",NewBatchName);
+            SETRANGE("Batch Name", NewBatchName);
         BatchName := NewBatchName;
         CurrPage.UPDATE;
     end;
 
     local procedure DeleteAllLines();
     var
-        CommWkshtLine : Record "Comm. Worksheet Line";
+        CommWkshtLine: Record CommissionWksheetLineTigCM;
     begin
-        if not CONFIRM(Text001,false) then
-          ERROR(Text003);
+        if not CONFIRM(Text001, false) then
+            ERROR(Text003);
 
         with CommWkshtLine do begin
-          SETRANGE("Batch Name",BatchName);
-          if FINDSET then begin
-            repeat
-              SetBypassSystemCheck(true);
-              DELETE(true);
-            until NEXT = 0;
-            SetBypassSystemCheck(false);
-            CurrPage.UPDATE;
-          end;
+            SETRANGE("Batch Name", BatchName);
+            if FINDSET then begin
+                repeat
+                    SetBypassSystemCheck(true);
+                    DELETE(true);
+                until NEXT = 0;
+                SetBypassSystemCheck(false);
+                CurrPage.UPDATE;
+            end;
         end;
     end;
 
     local procedure DeleteSelectedLines();
     var
-        CommWkshtLine : Record "Comm. Worksheet Line";
+        CommWkshtLine: Record CommissionWksheetLineTigCM;
     begin
-        if not CONFIRM(Text002,false) then
-          ERROR(Text003);
+        if not CONFIRM(Text002, false) then
+            ERROR(Text003);
 
         CurrPage.SETSELECTIONFILTER(CommWkshtLine);
         OnDeleteCheckMatchingSet(CommWkshtLine);
@@ -241,14 +241,14 @@ page 80014 "Commission Worksheet"
 
     local procedure InsertAdjustmentLine();
     var
-        LineNo : Integer;
+        LineNo: Integer;
     begin
         if BatchName = '' then
-          ERROR(Text004);
+            ERROR(Text004);
         if FINDLAST then
-          LineNo := "Line No." + 10000
+            LineNo := "Line No." + 10000
         else
-          LineNo := 10000;
+            LineNo := 10000;
         INIT;
         "Batch Name" := BatchName;
         "Line No." := LineNo;
@@ -258,7 +258,7 @@ page 80014 "Commission Worksheet"
 
     local procedure PostWorksheet();
     var
-        CommPost : Codeunit "Commission Post";
+        CommPost: Codeunit CommissionPostTigCM;
     begin
         CLEAR(CommPost);
         CommPost.PostCommWorksheet(Rec);

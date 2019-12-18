@@ -6,7 +6,7 @@ page 80004 "Commission Customer Groups"
 
     PageType = List;
     PromotedActionCategories = 'Manage,Functions,Update,Post,Print,Related Information,f';
-    SourceTable = "Commission Customer Group";
+    SourceTable = CommissionCustomerGroupTigCM;
 
     layout
     {
@@ -14,10 +14,10 @@ page 80004 "Commission Customer Groups"
         {
             repeater(Group)
             {
-                field("Code";Code)
+                field("Code"; Code)
                 {
                 }
-                field(Description;Description)
+                field(Description; Description)
                 {
                 }
             }
@@ -33,7 +33,7 @@ page 80004 "Commission Customer Groups"
                 //The property 'PromotedIsBig' can only be set if the property 'Promoted' is set to 'true'
                 //PromotedIsBig = true;
                 RunObject = Page "Commission Cust. Group Members";
-                RunPageLink = "Group Code"=FIELD(Code);
+                RunPageLink = "Group Code" = FIELD(Code);
             }
         }
     }

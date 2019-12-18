@@ -8,11 +8,11 @@ report 80003 "Commission-CalcRptWkshtTigCM"
 
     dataset
     {
-        dataitem(CommCustSalesperson; "Commission Cust/Salesperson")
+        dataitem(CommCustSalesperson; "CommCustomerSalespersonTigCM")
         {
             DataItemTableView = SORTING("Customer No.", "Salesperson Code");
             RequestFilterFields = "Date Filter", "Salesperson Code", "Customer No.";
-            dataitem("Comm. Recognition Entry"; "Comm. Recognition Entry")
+            dataitem("Comm. Recognition Entry"; CommRecognitionEntryTigCM)
             {
                 DataItemLink = "Customer No." = FIELD("Customer No.");
                 DataItemTableView = SORTING("Customer No.", "Trigger Posting Date", "Document Type", "Document No.");
@@ -36,7 +36,7 @@ report 80003 "Commission-CalcRptWkshtTigCM"
                     CommCustSalesperson.COPYFILTER("Date Filter", "Trigger Posting Date");
                 end;
             }
-            dataitem("Comm. Approval Entry"; "Comm. Approval Entry")
+            dataitem("Comm. Approval Entry"; CommApprovalEntryTigCM)
             {
                 DataItemLink = "Customer No." = FIELD("Customer No.");
                 DataItemTableView = SORTING("Customer No.", "Trigger Posting Date", "Document Type", "Document No.");
@@ -58,7 +58,7 @@ report 80003 "Commission-CalcRptWkshtTigCM"
                     CommCustSalesperson.COPYFILTER("Date Filter", "Trigger Posting Date");
                 end;
             }
-            dataitem("Comm. Payment Entry"; "Comm. Payment Entry")
+            dataitem("Comm. Payment Entry"; CommissionPaymentEntryTigCM)
             {
                 DataItemLink = "Customer No." = FIELD("Customer No.");
                 DataItemTableView = SORTING("Customer No.", "Date Paid", "Document No.");
@@ -135,9 +135,9 @@ report 80003 "Commission-CalcRptWkshtTigCM"
     end;
 
     var
-        ReportBuffer: Record "Comm. Report Wksht. Buffer";
-        RecogEntry: Record "Comm. Recognition Entry";
-        ApprovalEntry: Record "Comm. Approval Entry";
+        ReportBuffer: Record CommReportWkshtBufferTigCM;
+        RecogEntry: Record CommRecognitionEntryTigCM;
+        ApprovalEntry: Record CommApprovalEntryTigCM;
         EntryNo: Integer;
         RunDateTime: DateTime;
         Window: Dialog;

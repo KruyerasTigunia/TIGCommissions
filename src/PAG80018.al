@@ -7,7 +7,7 @@ page 80018 "Comm. Cust./Salespeople"
     Caption = 'Salespeople';
     DelayedInsert = true;
     PageType = List;
-    SourceTable = "Commission Cust/Salesperson";
+    SourceTable = "CommCustomerSalespersonTigCM";
 
     layout
     {
@@ -15,13 +15,13 @@ page 80018 "Comm. Cust./Salespeople"
         {
             repeater(Group)
             {
-                field("Salesperson Code";"Salesperson Code")
+                field("Salesperson Code"; "Salesperson Code")
                 {
                 }
-                field("Salesperson Name";"Salesperson Name")
+                field("Salesperson Name"; "Salesperson Name")
                 {
                 }
-                field("Split Pct.";"Split Pct.")
+                field("Split Pct."; "Split Pct.")
                 {
                 }
             }

@@ -1,4 +1,4 @@
-table 80018 "Comm. Payroll Export Entry"
+table 80018 "CommPayrollExportEntryTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,20 +7,20 @@ table 80018 "Comm. Payroll Export Entry"
 
     fields
     {
-        field(10;"Entry No.";Integer)
+        field(10; "Entry No."; Integer)
         {
         }
-        field(20;"Salesperson Code";Code[20])
+        field(20; "Salesperson Code"; Code[20])
         {
         }
-        field(30;"Employee No.";Code[20])
+        field(30; "Employee No."; Code[20])
         {
         }
     }
 
     keys
     {
-        key(Key1;"Entry No.")
+        key(Key1; "Entry No.")
         {
         }
     }

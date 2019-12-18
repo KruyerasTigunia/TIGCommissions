@@ -178,9 +178,9 @@ report 80001 "CommissionWkshttoExcelTigCM"
     end;
 
     var
-        CommWkshtLine: Record "Comm. Worksheet Line";
-        CommPmtEntry: Record "Comm. Payment Entry";
-        CommPmtEntryTemp: Record "Comm. Payment Entry" temporary;
+        CommWkshtLine: Record CommissionWksheetLineTigCM;
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        CommPmtEntryTemp: Record CommissionPaymentEntryTigCM temporary;
         Salesperson: Record "Salesperson/Purchaser";
         SalespersonTemp: Record "Salesperson/Purchaser" temporary;
         Customer: Record Customer;
@@ -246,7 +246,7 @@ report 80001 "CommissionWkshttoExcelTigCM"
         ExcelBuf.INSERT;
     end;
 
-    local procedure CopyWkshtToLedger(var CommWkshtLine2: Record "Comm. Worksheet Line"; var CommPmtEntry2: Record "Comm. Payment Entry"; SalespersonFilter: Text[100]);
+    local procedure CopyWkshtToLedger(var CommWkshtLine2: Record CommissionWksheetLineTigCM; var CommPmtEntry2: Record CommissionPaymentEntryTigCM; SalespersonFilter: Text[100]);
     begin
         CommWkshtLine2.SETCURRENTKEY("Salesperson Code", "Customer No.");
         if SalespersonFilter <> '' then
@@ -271,7 +271,7 @@ report 80001 "CommissionWkshttoExcelTigCM"
         end;
     end;
 
-    local procedure CopyLedgerToLedger(var CommPmtEntry2: Record "Comm. Payment Entry"; var CommPmtEntry3: Record "Comm. Payment Entry"; SalespersonFilter: Text[100]);
+    local procedure CopyLedgerToLedger(var CommPmtEntry2: Record CommissionPaymentEntryTigCM; var CommPmtEntry3: Record CommissionPaymentEntryTigCM; SalespersonFilter: Text[100]);
     begin
         CommPmtEntry2.SETCURRENTKEY("Salesperson Code", "Customer No.");
         if SalespersonFilter <> '' then
@@ -315,7 +315,7 @@ report 80001 "CommissionWkshttoExcelTigCM"
         RowNo := 6;
     end;
 
-    procedure SetSourceWorksheet(var CommWkshtLine2: Record "Comm. Worksheet Line");
+    procedure SetSourceWorksheet(var CommWkshtLine2: Record CommissionWksheetLineTigCM);
     begin
         if CommWkshtLine2.COUNT = 0 then
             ERROR(NothingToPrint);
@@ -324,7 +324,7 @@ report 80001 "CommissionWkshttoExcelTigCM"
         Source := Source::Worksheet;
     end;
 
-    procedure SetSourcePosted(var CommPmtEntry2: Record "Comm. Payment Entry");
+    procedure SetSourcePosted(var CommPmtEntry2: Record CommissionPaymentEntryTigCM);
     begin
         if CommPmtEntry2.COUNT = 0 then
             ERROR(NothingToPrint);

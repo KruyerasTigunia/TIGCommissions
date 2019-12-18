@@ -1,14 +1,14 @@
 codeunit 80003 "CreateCommEntriesFromHistTigCM"
 {
     var
-        CommSetup: Record "Commission Setup";
-        CommEntry: Record "Commission Setup Summary";
-        RecogEntry: Record "Comm. Recognition Entry";
-        ApprovalEntry: Record "Comm. Approval Entry";
-        PaymentEntry: Record "Comm. Payment Entry";
-        PaymentEntry2: Record "Comm. Payment Entry";
-        CommPlan: Record "Commission Plan";
-        CommPlanPayee: Record "Commission Plan Payee";
+        CommSetup: Record CommissionSetupTigCM;
+        CommEntry: Record CommissionSetupSummaryTigCM;
+        RecogEntry: Record CommRecognitionEntryTigCM;
+        ApprovalEntry: Record CommApprovalEntryTigCM;
+        PaymentEntry: Record CommissionPaymentEntryTigCM;
+        PaymentEntry2: Record CommissionPaymentEntryTigCM;
+        CommPlan: Record CommissionPlanTigCM;
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
         SalesLineTemp: Record "Sales Line" temporary;
         PurchHeader: Record "Purchase Header";
         PurchLine: Record "Purchase Line";
@@ -52,7 +52,7 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
 
     procedure CheckTriggers(TriggerMethod: Option Booking,Shipment,Invoice,Payment,,,Credit; var CommPlanCode: Code[20]; LineType: Option " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)") FailureCode: Code[20];
     var
-        CommPlanTemp: Record "Commission Plan" temporary;
+        CommPlanTemp: Record CommissionPlanTigCM temporary;
     begin
         GetCommSetup;
         RecognitionMode := false;
@@ -260,7 +260,7 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
         ValueEntry: Record "Value Entry";
         SalesCrMemoLine: Record "Sales Cr.Memo Line";
         CommPlanCode: Code[20];
-        CommPlanTemp: Record "Commission Plan" temporary;
+        CommPlanTemp: Record CommissionPlanTigCM temporary;
     begin
         ResetCodeunit;
 
@@ -345,8 +345,8 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
         SalesInvLine: Record "Sales Invoice Line";
         ItemLedgEntry: Record "Item Ledger Entry";
         SalesShptHeader: Record "Sales Shipment Header";
-        CommWkshtLineTemp: Record "Comm. Worksheet Line" temporary;
-        CommCustSalesperson: Record "Commission Cust/Salesperson";
+        CommWkshtLineTemp: Record CommissionWksheetLineTigCM temporary;
+        CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
         CommPlanCode: Code[20];
         DocNo: Code[20];
     begin
@@ -476,12 +476,12 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
         DetCustLedgEntry2.MODIFY;
     end;
 
-    procedure CalcSetupSummary(var CommSetupSummary: Record "Commission Setup Summary");
+    procedure CalcSetupSummary(var CommSetupSummary: Record CommissionSetupSummaryTigCM);
     var
         Customer: Record Customer;
-        CommPlanCalc: Record "Commission Plan Calculation";
-        CommCustSalesperson: Record "Commission Cust/Salesperson";
-        CommSetupSummary2: Record "Commission Setup Summary";
+        CommPlanCalc: Record CommissionPlanCalculationTigCM;
+        CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
+        CommSetupSummary2: Record CommissionSetupSummaryTigCM;
         CommPlanCode: Code[20];
         EntryNo: Integer;
     begin
@@ -553,10 +553,10 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
 
     end;
 
-    local procedure GetCustPlans(var CommPlanTemp: Record "Commission Plan" temporary; CustomerNo: Code[20]): Boolean;
+    local procedure GetCustPlans(var CommPlanTemp: Record CommissionPlanTigCM temporary; CustomerNo: Code[20]): Boolean;
     var
-        CommPlan: Record "Commission Plan";
-        CommCustGroupMember: Record "Commission Cust. Group Member";
+        CommPlan: Record CommissionPlanTigCM;
+        CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
     begin
         CommPlan.SETCURRENTKEY("Source Type", "Source Method", "Source Method Code");
         CommPlan.SETRANGE("Source Type", CommPlan."Source Type"::Customer);
@@ -655,10 +655,10 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
         exit(CommPlanTemp.COUNT > 0);
     end;
 
-    local procedure GetItemPlan(var CustCommPlanTemp: Record "Commission Plan" temporary; var CommPlanCode: Code[20]): Boolean;
+    local procedure GetItemPlan(var CustCommPlanTemp: Record CommissionPlanTigCM temporary; var CommPlanCode: Code[20]): Boolean;
     var
-        CommPlan: Record "Commission Plan";
-        CommUnitGroupMember: Record "Commission Unit Group Member";
+        CommPlan: Record CommissionPlanTigCM;
+        CommUnitGroupMember: Record CommissionUnitGroupMemberTigCM;
     begin
         CustCommPlanTemp.SETCURRENTKEY("Source Method Sort");
         CustCommPlanTemp.FINDSET;
@@ -701,7 +701,7 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
 
     local procedure CustomerInGroup(CommGroupCode: Code[20]; CustomerNo: Code[20]): Boolean;
     var
-        CommCustGroupMember: Record "Commission Cust. Group Member";
+        CommCustGroupMember: Record CommCustomerGroupMemberTigCM;
     begin
         CommCustGroupMember.SETRANGE("Group Code", CommGroupCode);
         CommCustGroupMember.SETRANGE("Customer No.", CustomerNo);
@@ -710,7 +710,7 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
 
     local procedure PlanHasPayees(CommPlanCode2: Code[20]): Boolean;
     var
-        CommPlanPayee: Record "Commission Plan Payee";
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
     begin
         CommPlanPayee.SETRANGE("Commission Plan Code", CommPlanCode2);
         CommPlanPayee.SETFILTER("Salesperson Code", '<>%1', '');
@@ -720,9 +720,9 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
     [EventSubscriber(ObjectType::Codeunit, 90, 'OnAfterPostPurchaseDoc', '', false, false)]
     local procedure UpdateCommPmtEntryPosted(var PurchaseHeader: Record "Purchase Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line"; PurchRcpHdrNo: Code[20]; RetShptHdrNo: Code[20]; PurchInvHdrNo: Code[20]; PurchCrMemoHdrNo: Code[20]);
     var
-        CommPmtEntry: Record "Comm. Payment Entry";
-        CommPmtEntry2: Record "Comm. Payment Entry";
-        CommApprovalEntry: Record "Comm. Approval Entry";
+        CommPmtEntry: Record CommissionPaymentEntryTigCM;
+        CommPmtEntry2: Record CommissionPaymentEntryTigCM;
+        CommApprovalEntry: Record CommApprovalEntryTigCM;
     begin
         //Update Comm. Pmt. Entry, related Comm. Appr. Entry, and flag to prevent deletion
         PaymentEntry.SETCURRENTKEY("Payment Method", "Payment Ref. No.", "Payment Ref. Line No.");
@@ -785,10 +785,10 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
 
     local procedure InsertApprovalEntry(SalesLineTemp: Record "Sales Line" temporary; TriggerDocNo2: Code[20]; TriggerMethod2: Option Booking,Shipment,Invoice,Payment,,,Credit; DetCustLedgEntryNo: Integer; PostingDate: Date; PostedDocNo: Code[20]);
     var
-        RecogEntry2: Record "Comm. Recognition Entry";
-        RecogEntry3: Record "Comm. Recognition Entry";
-        CommPlanTemp: Record "Commission Plan" temporary;
-        CommApprovalEntry2: Record "Comm. Approval Entry";
+        RecogEntry2: Record CommRecognitionEntryTigCM;
+        RecogEntry3: Record CommRecognitionEntryTigCM;
+        CommPlanTemp: Record CommissionPlanTigCM temporary;
+        CommApprovalEntry2: Record CommApprovalEntryTigCM;
         CommPlanCode: Code[20];
         QtyToApply: Decimal;
         RemQtyToApply: Decimal;
@@ -938,7 +938,7 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
         end;
     end;
 
-    local procedure InsertPaymentEntry(CommWkshtLine: Record "Comm. Worksheet Line"; ApprovalEntry: Record "Comm. Approval Entry"; DistributionMethod: Option Vendor,"External Provider",Manual; PaymentRefNo: Code[20]; PaymentLineNo: Integer; PostedDocNo: Code[20]);
+    local procedure InsertPaymentEntry(CommWkshtLine: Record CommissionWksheetLineTigCM; ApprovalEntry: Record CommApprovalEntryTigCM; DistributionMethod: Option Vendor,"External Provider",Manual; PaymentRefNo: Code[20]; PaymentLineNo: Integer; PostedDocNo: Code[20]);
     begin
         PaymentEntry.INIT;
         PaymentEntry."Entry No." := 0;
@@ -985,7 +985,7 @@ codeunit 80003 "CreateCommEntriesFromHistTigCM"
 
     local procedure GetLastEntryNo();
     var
-        ApprovalEntry2: Record "Comm. Approval Entry";
+        ApprovalEntry2: Record CommApprovalEntryTigCM;
     begin
         if EntryNo = 0 then begin
             if ApprovalEntry2.FINDLAST then

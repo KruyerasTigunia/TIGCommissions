@@ -6,7 +6,7 @@ page 80020 "Comm. Salespeople/Customers"
 
     Caption = 'Customers';
     PageType = ListPart;
-    SourceTable = "Commission Cust/Salesperson";
+    SourceTable = "CommCustomerSalespersonTigCM";
 
     layout
     {
@@ -14,13 +14,13 @@ page 80020 "Comm. Salespeople/Customers"
         {
             repeater(Group)
             {
-                field("Customer No.";"Customer No.")
+                field("Customer No."; "Customer No.")
                 {
                 }
-                field("Customer Name";"Customer Name")
+                field("Customer Name"; "Customer Name")
                 {
                 }
-                field("Split Pct.";"Split Pct.")
+                field("Split Pct."; "Split Pct.")
                 {
                 }
             }
@@ -32,7 +32,7 @@ page 80020 "Comm. Salespeople/Customers"
     }
 
     var
-        Text001 : TextConst ENU='Split Pct. distribution must = 100 or 0.';
-        SplitPctTotal : Decimal;
+        Text001: TextConst ENU = 'Split Pct. distribution must = 100 or 0.';
+        SplitPctTotal: Decimal;
 }
 

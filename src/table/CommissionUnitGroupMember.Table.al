@@ -1,4 +1,4 @@
-table 80008 "Commission Unit Group Member"
+table 80008 "CommissionUnitGroupMemberTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,11 +7,11 @@ table 80008 "Commission Unit Group Member"
 
     fields
     {
-        field(10;"Group Code";Code[20])
+        field(10; "Group Code"; Code[20])
         {
-            TableRelation = "Commission Unit Group";
+            TableRelation = CommissionUnitGroupTigCM;
         }
-        field(20;Type;Option)
+        field(20; Type; Option)
         {
             OptionCaption = ',G/L Account,Item,Resource';
             OptionMembers = " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)";
@@ -19,23 +19,25 @@ table 80008 "Commission Unit Group Member"
             trigger OnValidate();
             begin
                 if Type <> xRec.Type then
-                  VALIDATE("No.",'');
+                    VALIDATE("No.", '');
             end;
         }
-        field(30;"No.";Code[20])
+        field(30; "No."; Code[20])
         {
-            TableRelation = IF (Type=CONST(Item)) Item."No."
-                            ELSE IF (Type=CONST("G/L Account")) "G/L Account"."No."
-                            ELSE IF (Type=CONST(Resource)) Resource."No.";
+            TableRelation = IF (Type = CONST(Item)) Item."No."
+            ELSE
+            IF (Type = CONST("G/L Account")) "G/L Account"."No."
+            ELSE
+            IF (Type = CONST(Resource)) Resource."No.";
         }
     }
 
     keys
     {
-        key(Key1;"Group Code",Type,"No.")
+        key(Key1; "Group Code", Type, "No.")
         {
         }
-        key(Key2;Type,"No.")
+        key(Key2; Type, "No.")
         {
         }
     }

@@ -6,7 +6,7 @@ page 80021 "Comm. Salespeople/Plans"
 
     Caption = 'Plans';
     PageType = ListPart;
-    SourceTable = "Commission Plan Payee";
+    SourceTable = CommissionPlanPayeeTigCM;
 
     layout
     {
@@ -14,28 +14,28 @@ page 80021 "Comm. Salespeople/Plans"
         {
             repeater(Group)
             {
-                field("Commission Plan Code";"Commission Plan Code")
+                field("Commission Plan Code"; "Commission Plan Code")
                 {
                 }
-                field("Comm. Plan Description";"Comm. Plan Description")
+                field("Comm. Plan Description"; "Comm. Plan Description")
                 {
                 }
-                field("Distribution Method";"Distribution Method")
+                field("Distribution Method"; "Distribution Method")
                 {
                 }
-                field("Distribution Code";"Distribution Code")
+                field("Distribution Code"; "Distribution Code")
                 {
                 }
-                field("Distribution Name";"Distribution Name")
+                field("Distribution Name"; "Distribution Name")
                 {
                 }
-                field("Distribution Account No.";"Distribution Account No.")
+                field("Distribution Account No."; "Distribution Account No.")
                 {
                 }
-                field("Manager Level";"Manager Level")
+                field("Manager Level"; "Manager Level")
                 {
                 }
-                field("Manager Split Pct.";"Manager Split Pct.")
+                field("Manager Split Pct."; "Manager Split Pct.")
                 {
                 }
             }
@@ -47,7 +47,7 @@ page 80021 "Comm. Salespeople/Plans"
     }
 
     var
-        Text001 : TextConst ENU='Split Pct. distribution must = 100 or 0.';
-        SplitPctTotal : Decimal;
+        Text001: TextConst ENU = 'Split Pct. distribution must = 100 or 0.';
+        SplitPctTotal: Decimal;
 }
 

@@ -5,7 +5,7 @@ page 80000 "Commission Plan Card"
     // TIGCOMM1.0 Commissions
 
     PageType = Card;
-    SourceTable = "Commission Plan";
+    SourceTable = CommissionPlanTigCM;
 
     layout
     {
@@ -13,52 +13,52 @@ page 80000 "Commission Plan Card"
         {
             group(General)
             {
-                field("Code";Code)
+                field("Code"; Code)
                 {
                 }
-                field(Description;Description)
+                field(Description; Description)
                 {
                 }
-                field("Manager Level";"Manager Level")
+                field("Manager Level"; "Manager Level")
                 {
                 }
-                field("Source Type";"Source Type")
+                field("Source Type"; "Source Type")
                 {
                 }
-                field("Source Method";"Source Method")
+                field("Source Method"; "Source Method")
                 {
                 }
-                field("Source Method Code";"Source Method Code")
+                field("Source Method Code"; "Source Method Code")
                 {
                 }
-                field("Unit Type";"Unit Type")
+                field("Unit Type"; "Unit Type")
                 {
                 }
-                field("Unit Method";"Unit Method")
+                field("Unit Method"; "Unit Method")
                 {
                 }
-                field("Unit Method Code";"Unit Method Code")
+                field("Unit Method Code"; "Unit Method Code")
                 {
                 }
-                field("Commission Type";"Commission Type")
+                field("Commission Type"; "Commission Type")
                 {
                 }
-                field("Commission Basis";"Commission Basis")
+                field("Commission Basis"; "Commission Basis")
                 {
                 }
-                field("Recognition Trigger Method";"Recognition Trigger Method")
-                {
-                    Editable = false;
-                }
-                field("Payable Trigger Method";"Payable Trigger Method")
+                field("Recognition Trigger Method"; "Recognition Trigger Method")
                 {
                     Editable = false;
                 }
-                field("Pay On Invoice Discounts";"Pay On Invoice Discounts")
+                field("Payable Trigger Method"; "Payable Trigger Method")
+                {
+                    Editable = false;
+                }
+                field("Pay On Invoice Discounts"; "Pay On Invoice Discounts")
                 {
                     Visible = false;
                 }
-                field(Disabled;Disabled)
+                field(Disabled; Disabled)
                 {
                 }
             }
@@ -77,11 +77,11 @@ page 80000 "Commission Plan Card"
 
                 trigger OnAction();
                 var
-                    CommPlanCalc : Record "Commission Plan Calculation";
-                    CommPlanCalcs : Page "Commission Plan Calculations";
+                    CommPlanCalc: Record CommissionPlanCalculationTigCM;
+                    CommPlanCalcs: Page "Commission Plan Calculations";
                 begin
                     CLEAR(CommPlanCalc);
-                    CommPlanCalc.SETRANGE("Commission Plan Code",Code);
+                    CommPlanCalc.SETRANGE("Commission Plan Code", Code);
                     CommPlanCalcs.SETTABLEVIEW(CommPlanCalc);
                     CommPlanCalcs.RUNMODAL
                 end;
@@ -93,11 +93,11 @@ page 80000 "Commission Plan Card"
 
                 trigger OnAction();
                 var
-                    CommPlanPayee : Record "Commission Plan Payee";
-                    CommPlanPayees : Page "Commission Plan Payees";
+                    CommPlanPayee: Record CommissionPlanPayeeTigCM;
+                    CommPlanPayees: Page "Commission Plan Payees";
                 begin
                     CLEAR(CommPlanPayees);
-                    CommPlanPayee.SETRANGE("Commission Plan Code",Code);
+                    CommPlanPayee.SETRANGE("Commission Plan Code", Code);
                     CommPlanPayees.SETTABLEVIEW(CommPlanPayee);
                     CommPlanPayees.RUNMODAL
                 end;

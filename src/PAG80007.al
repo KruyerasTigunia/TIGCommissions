@@ -6,7 +6,7 @@ page 80007 "Commission Unit Group Members"
 
     DelayedInsert = true;
     PageType = List;
-    SourceTable = "Commission Unit Group Member";
+    SourceTable = CommissionUnitGroupMemberTigCM;
 
     layout
     {
@@ -14,12 +14,12 @@ page 80007 "Commission Unit Group Members"
         {
             repeater(Group)
             {
-                field("Group Code";"Group Code")
+                field("Group Code"; "Group Code")
                 {
                     Editable = false;
                     Visible = false;
                 }
-                field(Type;Type)
+                field(Type; Type)
                 {
 
                     trigger OnValidate();
@@ -27,7 +27,7 @@ page 80007 "Commission Unit Group Members"
                         Desc := GetDescription;
                     end;
                 }
-                field("No.";"No.")
+                field("No."; "No.")
                 {
 
                     trigger OnValidate();
@@ -36,7 +36,7 @@ page 80007 "Commission Unit Group Members"
                         CurrPage.UPDATE;
                     end;
                 }
-                field(Desc;Desc)
+                field(Desc; Desc)
                 {
                     Caption = 'Description';
                     Editable = false;
@@ -55,25 +55,25 @@ page 80007 "Commission Unit Group Members"
     end;
 
     var
-        Desc : Text[50];
+        Desc: Text[50];
 
-    local procedure GetDescription() : Text[50];
+    local procedure GetDescription(): Text[50];
     var
-        Item : Record Item;
-        Resource : Record Resource;
+        Item: Record Item;
+        Resource: Record Resource;
     begin
         if "No." = '' then
-          exit('');
+            exit('');
         if Type = Type::Item then begin
-          if not Item.GET("No.") then
-            CLEAR(Item);
-          exit(Item.Description);
+            if not Item.GET("No.") then
+                CLEAR(Item);
+            exit(Item.Description);
         end;
 
         if Type = Type::Resource then begin
-          if not Resource.GET("No.") then
-            CLEAR(Resource);
-          exit(Resource.Name);
+            if not Resource.GET("No.") then
+                CLEAR(Resource);
+            exit(Resource.Name);
         end;
     end;
 }

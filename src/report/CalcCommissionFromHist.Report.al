@@ -183,7 +183,7 @@ report 80002 "CalcCommissionFromHistTigCM"
     end;
 
     var
-        CommSetup: Record "Commission Setup";
+        CommSetup: Record CommissionSetupTigCM;
         SalesInvHeader: Record "Sales Invoice Header";
         CreateCommEntriesFromHist: Codeunit CreateCommEntriesFromHistTigCM;
         StartDate: Date;
@@ -197,9 +197,9 @@ report 80002 "CalcCommissionFromHistTigCM"
         Text003: Label 'Analyzing Shipments #1######';
         Text004: Label 'Analyzing Invoices #1######';
         Text005: Label 'Analyzing Credit Memos #1######';
-        cre: Record "Comm. Recognition Entry";
-        cae: Record "Comm. Approval Entry";
+        cre: Record CommRecognitionEntryTigCM;
+        cae: Record CommApprovalEntryTigCM;
         Text006: Label 'Analyzing Payments #1######';
-        cpe: Record "Comm. Payment Entry";
+        cpe: Record CommissionPaymentEntryTigCM;
 }
 

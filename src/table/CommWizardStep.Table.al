@@ -1,4 +1,4 @@
-table 80019 "Comm. Wizard Step"
+table 80019 "CommWizardStepTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,26 +7,26 @@ table 80019 "Comm. Wizard Step"
 
     fields
     {
-        field(10;"Entry No.";Integer)
+        field(10; "Entry No."; Integer)
         {
         }
-        field(20;"Action Msg.";Text[250])
+        field(20; "Action Msg."; Text[250])
         {
         }
-        field(30;Complete;Boolean)
+        field(30; Complete; Boolean)
         {
         }
-        field(40;"Action Code";Code[20])
+        field(40; "Action Code"; Code[20])
         {
         }
-        field(50;Help;Text[1])
+        field(50; Help; Text[1])
         {
         }
     }
 
     keys
     {
-        key(Key1;"Entry No.")
+        key(Key1; "Entry No.")
         {
         }
     }

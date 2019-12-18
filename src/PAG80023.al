@@ -10,7 +10,7 @@ page 80023 "Comm. Wizard Steps"
     InsertAllowed = false;
     PageType = ListPart;
     RefreshOnActivate = true;
-    SourceTable = "Comm. Wizard Step";
+    SourceTable = CommWizardStepTigCM;
 
     layout
     {
@@ -18,20 +18,20 @@ page 80023 "Comm. Wizard Steps"
         {
             repeater(Group)
             {
-                field(Line;"Entry No.")
+                field(Line; "Entry No.")
                 {
                     Editable = false;
                 }
-                field("Action Msg.";"Action Msg.")
+                field("Action Msg."; "Action Msg.")
                 {
                     Caption = 'Setup Steps';
                     Editable = false;
                 }
-                field(Complete;Complete)
+                field(Complete; Complete)
                 {
                     Editable = false;
                 }
-                field(Help;Help)
+                field(Help; Help)
                 {
                     Editable = false;
 
@@ -48,7 +48,7 @@ page 80023 "Comm. Wizard Steps"
     {
     }
 
-    procedure GetEntryNo() : Integer;
+    procedure GetEntryNo(): Integer;
     begin
         exit("Entry No.");
     end;

@@ -6,7 +6,7 @@ page 80001 "Commission Plan List"
 
     CardPageID = "Commission Plan Card";
     PageType = List;
-    SourceTable = "Commission Plan";
+    SourceTable = CommissionPlanTigCM;
 
     layout
     {
@@ -14,31 +14,31 @@ page 80001 "Commission Plan List"
         {
             repeater(Group)
             {
-                field("Code";Code)
+                field("Code"; Code)
                 {
                 }
-                field(Description;Description)
+                field(Description; Description)
                 {
                 }
-                field("Source Type";"Source Type")
+                field("Source Type"; "Source Type")
                 {
                 }
-                field("Source Method";"Source Method")
+                field("Source Method"; "Source Method")
                 {
                 }
-                field("Source Method Code";"Source Method Code")
+                field("Source Method Code"; "Source Method Code")
                 {
                 }
-                field("Unit Type";"Unit Type")
+                field("Unit Type"; "Unit Type")
                 {
                 }
-                field("Unit Method";"Unit Method")
+                field("Unit Method"; "Unit Method")
                 {
                 }
-                field("Unit Method Code";"Unit Method Code")
+                field("Unit Method Code"; "Unit Method Code")
                 {
                 }
-                field("Manager Level";"Manager Level")
+                field("Manager Level"; "Manager Level")
                 {
                 }
             }
@@ -57,11 +57,11 @@ page 80001 "Commission Plan List"
 
                 trigger OnAction();
                 var
-                    CommPlanCalc : Record "Commission Plan Calculation";
-                    CommPlanCalcs : Page "Commission Plan Calculations";
+                    CommPlanCalc: Record CommissionPlanCalculationTigCM;
+                    CommPlanCalcs: Page "Commission Plan Calculations";
                 begin
                     CLEAR(CommPlanCalc);
-                    CommPlanCalc.SETRANGE("Commission Plan Code",Code);
+                    CommPlanCalc.SETRANGE("Commission Plan Code", Code);
                     CommPlanCalcs.SETTABLEVIEW(CommPlanCalc);
                     CommPlanCalcs.RUNMODAL
                 end;
@@ -73,11 +73,11 @@ page 80001 "Commission Plan List"
 
                 trigger OnAction();
                 var
-                    CommPlanPayee : Record "Commission Plan Payee";
-                    CommPlanPayees : Page "Commission Plan Payees";
+                    CommPlanPayee: Record CommissionPlanPayeeTigCM;
+                    CommPlanPayees: Page "Commission Plan Payees";
                 begin
                     CLEAR(CommPlanPayees);
-                    CommPlanPayee.SETRANGE("Commission Plan Code",Code);
+                    CommPlanPayee.SETRANGE("Commission Plan Code", Code);
                     CommPlanPayees.SETTABLEVIEW(CommPlanPayee);
                     CommPlanPayees.RUNMODAL
                 end;

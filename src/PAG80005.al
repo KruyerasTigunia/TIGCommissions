@@ -6,7 +6,7 @@ page 80005 "Commission Cust. Group Members"
 
     DelayedInsert = true;
     PageType = List;
-    SourceTable = "Commission Cust. Group Member";
+    SourceTable = CommCustomerGroupMemberTigCM;
 
     layout
     {
@@ -14,15 +14,15 @@ page 80005 "Commission Cust. Group Members"
         {
             repeater(Group)
             {
-                field("Group Code";"Group Code")
+                field("Group Code"; "Group Code")
                 {
                     Editable = false;
                     Visible = false;
                 }
-                field("Customer No.";"Customer No.")
+                field("Customer No."; "Customer No.")
                 {
                 }
-                field("Customer Name";"Customer Name")
+                field("Customer Name"; "Customer Name")
                 {
                 }
             }

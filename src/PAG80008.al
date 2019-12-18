@@ -17,31 +17,31 @@ page 80008 "Commission Customers"
             repeater(Group)
             {
                 Editable = false;
-                field("No.";"No.")
+                field("No."; "No.")
                 {
                 }
-                field(Name;Name)
+                field(Name; Name)
                 {
                 }
-                field("Search Name";"Search Name")
+                field("Search Name"; "Search Name")
                 {
                 }
-                field(Address;Address)
+                field(Address; Address)
                 {
                 }
-                field(City;City)
+                field(City; City)
                 {
                 }
-                field(County;County)
+                field(County; County)
                 {
                 }
-                field("Post Code";"Post Code")
+                field("Post Code"; "Post Code")
                 {
                 }
             }
-            part(Salespeople;"Comm. Cust./Salespeople")
+            part(Salespeople; "Comm. Cust./Salespeople")
             {
-                SubPageLink = "Customer No."=FIELD("No.");
+                SubPageLink = "Customer No." = FIELD("No.");
                 UpdatePropagation = Both;
             }
         }
@@ -59,11 +59,11 @@ page 80008 "Commission Customers"
 
                 trigger OnAction();
                 var
-                    CommCustSalesperson : Record "Commission Cust/Salesperson";
-                    CommCustSalespersons : Page "Comm. Cust./Salespeople";
+                    CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
+                    CommCustSalespersons: Page "Comm. Cust./Salespeople";
                 begin
                     CommCustSalesperson.RESET;
-                    CommCustSalesperson.SETRANGE("Customer No.","No.");
+                    CommCustSalesperson.SETRANGE("Customer No.", "No.");
                     CLEAR(CommCustSalespersons);
                     CommCustSalespersons.SETTABLEVIEW(CommCustSalesperson);
                     CommCustSalespersons.RUNMODAL;

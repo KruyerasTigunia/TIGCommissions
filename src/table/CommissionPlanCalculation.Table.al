@@ -1,4 +1,4 @@
-table 80001 "Commission Plan Calculation"
+table 80001 "CommissionPlanCalculationTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,39 +7,39 @@ table 80001 "Commission Plan Calculation"
 
     fields
     {
-        field(10;"Commission Plan Code";Code[20])
+        field(10; "Commission Plan Code"; Code[20])
         {
-            TableRelation = "Commission Plan";
+            TableRelation = CommissionPlanTigCM;
         }
-        field(20;"Tier Amount/Qty.";Decimal)
-        {
-        }
-        field(30;"Commission Rate";Decimal)
+        field(20; "Tier Amount/Qty."; Decimal)
         {
         }
-        field(40;Retroactive;Boolean)
+        field(30; "Commission Rate"; Decimal)
+        {
+        }
+        field(40; Retroactive; Boolean)
         {
 
             trigger OnValidate();
             begin
                 if Retroactive then
-                  ERROR(FeatureNotEnabled);
+                    ERROR(FeatureNotEnabled);
             end;
         }
-        field(100;"Introductory Rate";Decimal)
+        field(100; "Introductory Rate"; Decimal)
         {
         }
-        field(110;"Intro Expires From First Sale";DateFormula)
+        field(110; "Intro Expires From First Sale"; DateFormula)
         {
         }
     }
 
     keys
     {
-        key(Key1;"Commission Plan Code")
+        key(Key1; "Commission Plan Code")
         {
         }
-        key(Key2;"Tier Amount/Qty.")
+        key(Key2; "Tier Amount/Qty.")
         {
         }
     }
@@ -49,6 +49,6 @@ table 80001 "Commission Plan Calculation"
     }
 
     var
-        FeatureNotEnabled : Label 'Feature not enabled.';
+        FeatureNotEnabled: Label 'Feature not enabled.';
 }
 

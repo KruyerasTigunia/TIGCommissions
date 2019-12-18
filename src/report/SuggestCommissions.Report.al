@@ -26,7 +26,7 @@ report 80000 "SuggestCommissionsTigCM"
                 CurrReport.BREAK;
             end;
         }
-        dataitem("Comm. Approval Entry"; "Comm. Approval Entry")
+        dataitem("Comm. Approval Entry"; CommApprovalEntryTigCM)
         {
             DataItemTableView = SORTING("Customer No.", Open) WHERE(Open = CONST(true));
 

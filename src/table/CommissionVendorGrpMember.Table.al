@@ -1,4 +1,4 @@
-table 80010 "Commission Vendor Group Member"
+table 80010 "CommissionVendorGrpMemberTigCM"
 {
     // version TIGCOMM1.0
 
@@ -7,11 +7,11 @@ table 80010 "Commission Vendor Group Member"
 
     fields
     {
-        field(10;"Commission Vendor Group Code";Code[20])
+        field(10; "Commission Vendor Group Code"; Code[20])
         {
             TableRelation = Table80020;
         }
-        field(20;"Vendor No.";Code[20])
+        field(20; "Vendor No."; Code[20])
         {
             TableRelation = Vendor;
         }
@@ -19,7 +19,7 @@ table 80010 "Commission Vendor Group Member"
 
     keys
     {
-        key(Key1;"Commission Vendor Group Code","Vendor No.")
+        key(Key1; "Commission Vendor Group Code", "Vendor No.")
         {
         }
     }
