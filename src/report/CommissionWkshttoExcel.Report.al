@@ -1,70 +1,67 @@
 report 80001 "CommissionWkshttoExcelTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
-    CaptionML = ESM = 'Conciliar ctas. pdtes. con cont.',
-                FRC = 'Rapprocher CF au GL',
-                ENC = 'Reconcile AP to GL';
+    //FIXME - find alternative for current excel buffer functionality
+    Caption = 'Commission Worksheet to Excel';
+    ApplicationArea = All;
+    UsageCategory = Tasks;
     ProcessingOnly = true;
 
     dataset
     {
         dataitem(CommissionPmtEntry; "Integer")
         {
-            DataItemTableView = SORTING(Number);
+            DataItemTableView = sorting(Number);
             dataitem(SalesRep; "Integer")
             {
-                DataItemTableView = SORTING(Number);
+                DataItemTableView = sorting(Number);
 
                 trigger OnAfterGetRecord();
                 begin
                     if Number = 1 then
-                        SalespersonTemp.FIND('-')
+                        SalespersonTemp.FindSet()
                     else
-                        SalespersonTemp.NEXT;
+                        SalespersonTemp.Next();
                     SalespersonTemp."Commission %" := 0;
 
                     if SalespersonTemp.Code <> LastSalespersonCode then
                         WriteExcelWkshtHeader(true, SalespersonTemp.Name);
 
                     with CommPmtEntryTemp do begin
-                        SETRANGE("Salesperson Code", SalespersonTemp.Code);
-                        if FIND('-') then begin
+                        SetRange("Salesperson Code", SalespersonTemp.Code);
+                        if FindSet() then begin
                             repeat
-                                Customer.GET("Customer No.");
-                                EnterCell(RowNo, 1, FORMAT("Batch Name"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 2, FORMAT("Salesperson Code"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 3, FORMAT("Entry Type"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 4, FORMAT("Posting Date"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 5, FORMAT("Payout Date"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 6, FORMAT(Customer.Name), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 7, FORMAT("Document No."), false, false, '', ExcelBuf."Cell Type"::Text);
+                                Customer.Get("Customer No.");
+                                EnterCell(RowNo, 1, Format("Batch Name"), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 2, Format("Salesperson Code"), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 3, Format("Entry Type"), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 4, Format("Posting Date"), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 5, Format("Payout Date"), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 6, Format(Customer.Name), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 7, Format("Document No."), false, false, '', ExcelBuf."Cell Type"::Text);
                                 EnterCell(RowNo, 8, Description, false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 9, FORMAT("Commission Plan Code"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 10, FORMAT(Amount, 0, '<Sign><Integer><Decimal,3>'), false, false, '', ExcelBuf."Cell Type"::Number);
+                                EnterCell(RowNo, 9, Format("Commission Plan Code"), false, false, '', ExcelBuf."Cell Type"::Text);
+                                EnterCell(RowNo, 10, Format(Amount, 0, '<Sign><Integer><Decimal,3>'), false, false, '', ExcelBuf."Cell Type"::Number);
                                 RowNo += 1;
 
                                 SalespersonTemp."Commission %" += Amount;
                                 LastSalespersonCode := "Salesperson Code";
-                            until NEXT = 0;
+                            until Next() = 0;
                             //Sum totals
-                            EnterFormula(RowNo, 10, '=SUM(J6:J' + FORMAT(RowNo - 1) + ')', true, false, '');
+                            EnterFormula(RowNo, 10, '=SUM(J6:J' + Format(RowNo - 1) + ')', true, false, '');
                         end;
                     end;
-                    SalespersonTemp.MODIFY;
+                    SalespersonTemp.Modify();
 
                     ExcelBuf.WriteSheet(
                       SalespersonTemp.Name,
-                      COMPANYNAME,
-                      USERID);
+                      CompanyName(),
+                      UserId());
                 end;
 
                 trigger OnPreDataItem();
                 begin
-                    SETRANGE(Number, 1, SalespersonTemp.COUNT);
-                    if SalespersonTemp.FINDFIRST then begin
+                    SetRange(Number, 1, SalespersonTemp.Count());
+                    if SalespersonTemp.FindFirst() then begin
                         WriteExcelWkshtHeader(false, SalespersonTemp.Name);
                         LastSalespersonCode := SalespersonTemp.Code;
                     end;
@@ -74,14 +71,14 @@ report 80001 "CommissionWkshttoExcelTigCM"
             trigger OnPostDataItem();
             begin
                 //Write summary sheet if more than 1 salesperson
-                if SalespersonTemp.COUNT > 1 then begin
-                    if SalespersonTemp.FIND('-') then begin
-                        ExcelBuf.DELETEALL;
+                if SalespersonTemp.Count() > 1 then begin
+                    if SalespersonTemp.FindSet() then begin
+                        ExcelBuf.DeleteAll();
                         ExcelBuf.CreateNewSheet(SummaryLbl);
 
-                        EnterCell(1, 1, COMPANYNAME, true, false, '', ExcelBuf."Cell Type"::Text);
+                        EnterCell(1, 1, CopyStr(CompanyName(), 1, 250), true, false, '', ExcelBuf."Cell Type"::Text);
                         EnterCell(2, 1, ReportTitle, true, false, '', ExcelBuf."Cell Type"::Text);
-                        EnterCell(3, 1, FORMAT(ReportRunTime) + ': ' + USERID, true, false, '', ExcelBuf."Cell Type"::Text);
+                        EnterCell(3, 1, Format(ReportRunTime) + ': ' + UserId(), true, false, '', ExcelBuf."Cell Type"::Text);
                         RowNo := 5;
 
                         EnterCell(RowNo, 1, SalespersonCodeLbl, true, false, '', ExcelBuf."Cell Type"::Text);
@@ -90,17 +87,17 @@ report 80001 "CommissionWkshttoExcelTigCM"
 
                         repeat
                             EnterCell(RowNo, 1, SalespersonTemp.Name, false, false, '', ExcelBuf."Cell Type"::Text);
-                            EnterCell(RowNo, 2, FORMAT(ROUND(SalespersonTemp."Commission %", 0.01), 0, '<Sign><Integer><Decimal,3>'), false, false, '', ExcelBuf."Cell Type"::Number);
+                            EnterCell(RowNo, 2, Format(ROUND(SalespersonTemp."Commission %", 0.01), 0, '<Sign><Integer><Decimal,3>'), false, false, '', ExcelBuf."Cell Type"::Number);
                             RowNo += 1;
-                        until SalespersonTemp.NEXT = 0;
+                        until SalespersonTemp.Next() = 0;
 
                         //Sum totals
-                        EnterFormula(RowNo, 2, '=SUM(B6:B' + FORMAT(RowNo - 1) + ')', true, false, '');
+                        EnterFormula(RowNo, 2, '=SUM(B6:B' + Format(RowNo - 1) + ')', true, false, '');
 
                         ExcelBuf.WriteSheet(
                           SummaryLbl,
-                          COMPANYNAME,
-                          USERID);
+                          CompanyName(),
+                          UserId());
                     end;
                 end;
             end;
@@ -111,29 +108,29 @@ report 80001 "CommissionWkshttoExcelTigCM"
                     Source::Worksheet:
                         begin
                             CopyWkshtToLedger(CommWkshtLine, CommPmtEntryTemp, SalespersonFilter);
-                            ReportTitle := ReportTitleWksht;
+                            ReportTitle := ReportTitleWkshtLbl;
                         end;
                     Source::Posted:
                         begin
                             CopyLedgerToLedger(CommPmtEntry, CommPmtEntryTemp, SalespersonFilter);
-                            ReportTitle := ReporTitlePosted;
+                            ReportTitle := ReporTitlePostedLbl;
                         end;
                     Source::" ":
-                        ERROR(NothingToPrint);
+                        ERROR(NothingToPrintErr);
                 end;
 
-                SETRANGE(Number, 1, CommPmtEntryTemp.COUNT);
-                CommPmtEntryTemp.SETCURRENTKEY("Salesperson Code", "Customer No.");
-                if CommPmtEntryTemp.FIND('-') then begin
+                SetRange(Number, 1, CommPmtEntryTemp.Count());
+                CommPmtEntryTemp.SetCurrentKey("Salesperson Code", "Customer No.");
+                if CommPmtEntryTemp.FindSet() then begin
                     repeat
-                        if not SalespersonTemp.GET(CommPmtEntryTemp."Salesperson Code") then begin
-                            Salesperson.GET(CommPmtEntryTemp."Salesperson Code");
+                        if not SalespersonTemp.Get(CommPmtEntryTemp."Salesperson Code") then begin
+                            Salesperson.Get(CommPmtEntryTemp."Salesperson Code");
                             SalespersonTemp := Salesperson;
-                            SalespersonTemp.INSERT;
+                            SalespersonTemp.Insert();
                         end;
-                    until CommPmtEntryTemp.NEXT = 0;
+                    until CommPmtEntryTemp.Next() = 0;
                 end;
-                SETRANGE(Number, 1);
+                SetRange(Number, 1);
             end;
         }
     }
@@ -146,35 +143,30 @@ report 80001 "CommissionWkshttoExcelTigCM"
         {
             area(content)
             {
-                field(SalespersonFilter; SalespersonFilter)
+                field(TheSalespersonFilter; SalespersonFilter)
                 {
                     Caption = 'Salesperson Filter';
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the Salesperson Filter';
                     TableRelation = "Salesperson/Purchaser";
                 }
             }
         }
 
-        actions
-        {
-        }
-    }
-
-    labels
-    {
     }
 
     trigger OnPostReport();
     begin
         if BookOpen then begin
-            ExcelBuf.CloseBook;
-            ExcelBuf.OpenExcel;
+            ExcelBuf.CloseBook();
+            ExcelBuf.OpenExcel();
             ExcelBuf.GiveUserControl;
         end;
     end;
 
     trigger OnPreReport();
     begin
-        ReportRunTime := CURRENTDATETIME;
+        ReportRunTime := CurrentDateTime();
     end;
 
     var
@@ -187,13 +179,14 @@ report 80001 "CommissionWkshttoExcelTigCM"
         ExcelBuf: Record "Excel Buffer";
         EntryNo: Integer;
         RowNo: Integer;
-        ColNo: Integer;
-        SendToExcel: Boolean;
         BookOpen: Boolean;
-        ReportTitleWksht: Label 'Suggested Commissions to Pay';
-        ReporTitlePosted: Label 'Posted Commission Payments';
-        Source: Option " ",Worksheet,Posted;
+        LastSalespersonCode: Code[20];
+        SalespersonFilter: Code[20];
+        ReportRunTime: DateTime;
         ReportTitle: Text[50];
+        Source: Option " ",Worksheet,Posted;
+        ReportTitleWkshtLbl: Label 'Suggested Commissions to Pay';
+        ReporTitlePostedLbl: Label 'Posted Commission Payments';
         BatchNameLbl: Label 'Batch Name';
         EntryTypeLbl: Label 'Entry Type';
         PostingDateLbl: Label 'Posting Date';
@@ -204,24 +197,21 @@ report 80001 "CommissionWkshttoExcelTigCM"
         DescriptionLbl: Label 'Description';
         AmountLbl: Label 'Amount';
         CommissionPlanLbl: Label 'Comm. Plan';
-        LastSalespersonCode: Code[20];
         SummaryLbl: Label 'Summary';
-        SalespersonFilter: Code[20];
-        ReportRunTime: DateTime;
-        NothingToPrint: Label 'Nothing to print.';
+        NothingToPrintErr: Label 'Nothing to print.';
 
     local procedure EnterCell(RowNo: Integer; ColumnNo: Integer; CellValue: Text[250]; Bold: Boolean; UnderLine: Boolean; NumberFormat: Text[30]; CellType: Option);
     begin
-        ExcelBuf.INIT;
-        ExcelBuf.VALIDATE("Row No.", RowNo);
-        ExcelBuf.VALIDATE("Column No.", ColumnNo);
+        ExcelBuf.Init();
+        ExcelBuf.Validate("Row No.", RowNo);
+        ExcelBuf.Validate("Column No.", ColumnNo);
         ExcelBuf."Cell Value as Text" := CellValue;
         ExcelBuf.Formula := '';
         ExcelBuf.Bold := Bold;
         ExcelBuf.Underline := UnderLine;
         ExcelBuf.NumberFormat := NumberFormat;
         ExcelBuf."Cell Type" := CellType;
-        ExcelBuf.INSERT;
+        ExcelBuf.Insert();
     end;
 
     local procedure EnterFilterInCell("Filter": Text[250]; FieldName: Text[100]);
@@ -235,26 +225,26 @@ report 80001 "CommissionWkshttoExcelTigCM"
 
     local procedure EnterFormula(RowNo: Integer; ColumnNo: Integer; CellValue: Text[250]; Bold: Boolean; UnderLine: Boolean; NumberFormat: Text[30]);
     begin
-        ExcelBuf.INIT;
-        ExcelBuf.VALIDATE("Row No.", RowNo);
-        ExcelBuf.VALIDATE("Column No.", ColumnNo);
+        ExcelBuf.Init();
+        ExcelBuf.Validate("Row No.", RowNo);
+        ExcelBuf.Validate("Column No.", ColumnNo);
         ExcelBuf."Cell Value as Text" := '';
         ExcelBuf.Formula := CellValue; // is converted to formula later.
         ExcelBuf.Bold := Bold;
         ExcelBuf.Underline := UnderLine;
         ExcelBuf.NumberFormat := NumberFormat;
-        ExcelBuf.INSERT;
+        ExcelBuf.Insert();
     end;
 
     local procedure CopyWkshtToLedger(var CommWkshtLine2: Record CommissionWksheetLineTigCM; var CommPmtEntry2: Record CommissionPaymentEntryTigCM; SalespersonFilter: Text[100]);
     begin
-        CommWkshtLine2.SETCURRENTKEY("Salesperson Code", "Customer No.");
+        CommWkshtLine2.SetCurrentKey("Salesperson Code", "Customer No.");
         if SalespersonFilter <> '' then
-            CommWkshtLine2.SETRANGE("Salesperson Code", SalespersonFilter);
-        if CommWkshtLine2.FIND('-') then begin
+            CommWkshtLine2.SetRange("Salesperson Code", SalespersonFilter);
+        if CommWkshtLine2.FindSet() then begin
             repeat
                 EntryNo += 1;
-                CommPmtEntry2.INIT;
+                CommPmtEntry2.Init();
                 CommPmtEntry2."Entry No." := EntryNo;
                 CommPmtEntry2."Batch Name" := CommWkshtLine2."Batch Name";
                 CommPmtEntry2."Entry Type" := CommWkshtLine2."Entry Type";
@@ -266,40 +256,40 @@ report 80001 "CommissionWkshttoExcelTigCM"
                 CommPmtEntry2.Amount := CommWkshtLine2.Amount;
                 CommPmtEntry2."Commission Plan Code" := CommWkshtLine2."Commission Plan Code";
                 CommPmtEntry2.Description := CommWkshtLine.Description;
-                CommPmtEntry2.INSERT;
-            until CommWkshtLine2.NEXT = 0;
+                CommPmtEntry2.Insert();
+            until CommWkshtLine2.Next() = 0;
         end;
     end;
 
     local procedure CopyLedgerToLedger(var CommPmtEntry2: Record CommissionPaymentEntryTigCM; var CommPmtEntry3: Record CommissionPaymentEntryTigCM; SalespersonFilter: Text[100]);
     begin
-        CommPmtEntry2.SETCURRENTKEY("Salesperson Code", "Customer No.");
+        CommPmtEntry2.SetCurrentKey("Salesperson Code", "Customer No.");
         if SalespersonFilter <> '' then
-            CommPmtEntry2.SETFILTER("Salesperson Code", SalespersonFilter);
-        if CommPmtEntry2.FIND('-') then begin
+            CommPmtEntry2.SetFilter("Salesperson Code", SalespersonFilter);
+        if CommPmtEntry2.FindSet() then begin
             repeat
                 CommPmtEntry3 := CommPmtEntry2;
-                CommPmtEntry3.INSERT;
-            until CommPmtEntry2.NEXT = 0;
+                CommPmtEntry3.Insert();
+            until CommPmtEntry2.Next() = 0;
         end;
     end;
 
     local procedure WriteExcelWkshtHeader(CreateNewSheet: Boolean; NewSheetCaption: Text[50]);
     begin
         if not BookOpen then begin
-            ExcelBuf.DELETEALL;
+            ExcelBuf.DeleteAll();
             ExcelBuf.CreateBook('', NewSheetCaption);
             BookOpen := true;
         end;
 
         if CreateNewSheet then begin
             ExcelBuf.CreateNewSheet(NewSheetCaption);
-            ExcelBuf.DELETEALL;
+            ExcelBuf.DeleteAll();
         end;
 
-        EnterCell(1, 1, COMPANYNAME, true, false, '', ExcelBuf."Cell Type"::Text);
+        EnterCell(1, 1, CopyStr(CompanyName(), 1, 250), true, false, '', ExcelBuf."Cell Type"::Text);
         EnterCell(2, 1, ReportTitle, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(3, 1, FORMAT(ReportRunTime) + ': ' + USERID, true, false, '', ExcelBuf."Cell Type"::Text);
+        EnterCell(3, 1, Format(ReportRunTime) + ': ' + UserId(), true, false, '', ExcelBuf."Cell Type"::Text);
         RowNo := 5;
 
         EnterCell(RowNo, 1, BatchNameLbl, true, false, '', ExcelBuf."Cell Type"::Text);
@@ -317,19 +307,19 @@ report 80001 "CommissionWkshttoExcelTigCM"
 
     procedure SetSourceWorksheet(var CommWkshtLine2: Record CommissionWksheetLineTigCM);
     begin
-        if CommWkshtLine2.COUNT = 0 then
-            ERROR(NothingToPrint);
+        if CommWkshtLine2.IsEmpty() then
+            ERROR(NothingToPrintErr);
         CommWkshtLine := CommWkshtLine2;
-        CommWkshtLine.COPYFILTERS(CommWkshtLine2);
+        CommWkshtLine.CopyFilters(CommWkshtLine2);
         Source := Source::Worksheet;
     end;
 
     procedure SetSourcePosted(var CommPmtEntry2: Record CommissionPaymentEntryTigCM);
     begin
-        if CommPmtEntry2.COUNT = 0 then
-            ERROR(NothingToPrint);
+        if CommPmtEntry2.IsEmpty() then
+            ERROR(NothingToPrintErr);
         CommPmtEntry := CommPmtEntry2;
-        CommPmtEntry.COPYFILTERS(CommPmtEntry2);
+        CommPmtEntry.CopyFilters(CommPmtEntry2);
         Source := Source::Posted;
     end;
 }

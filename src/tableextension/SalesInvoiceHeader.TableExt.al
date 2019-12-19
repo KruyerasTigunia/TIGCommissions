@@ -8,4 +8,8 @@ tableextension 80001 "SalesInvoiceHeaderTigCM" extends "Sales Invoice Header"
             DataClassification = CustomerContent;
         }
     }
+    keys
+    {
+        key(Key80000; CommissionCalculatedTigCM) { }
+    }
 }

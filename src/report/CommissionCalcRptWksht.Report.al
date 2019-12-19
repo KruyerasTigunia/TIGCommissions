@@ -1,97 +1,96 @@
 report 80003 "Commission-CalcRptWkshtTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Royalties
-
+    Caption = 'Commission - Calculate Report Worksheet';
+    ApplicationArea = All;
+    UsageCategory = Tasks;
     ProcessingOnly = true;
 
     dataset
     {
         dataitem(CommCustSalesperson; "CommCustomerSalespersonTigCM")
         {
-            DataItemTableView = SORTING("Customer No.", "Salesperson Code");
+            DataItemTableView = sorting("Customer No.", "Salesperson Code");
             RequestFilterFields = "Date Filter", "Salesperson Code", "Customer No.";
             dataitem("Comm. Recognition Entry"; CommRecognitionEntryTigCM)
             {
-                DataItemLink = "Customer No." = FIELD("Customer No.");
-                DataItemTableView = SORTING("Customer No.", "Trigger Posting Date", "Document Type", "Document No.");
+                DataItemLink = "Customer No." = field("Customer No.");
+                DataItemTableView = sorting("Customer No.", "Trigger Posting Date", "Document Type", "Document No.");
 
                 trigger OnAfterGetRecord();
                 begin
-                    CALCFIELDS("Basis Amt. Approved to Pay", "Basis Amt. Paid");
+                    CalcFields("Basis Amt. Approved to Pay", "Basis Amt. Paid");
 
-                    ApprovalEntry.SETCURRENTKEY("Comm. Recog. Entry No.");
-                    ApprovalEntry.SETRANGE("Comm. Recog. Entry No.", "Entry No.");
-                    ApprovalEntry.CALCSUMS("Amt. Remaining to Pay");
+                    ApprovalEntry.SetCurrentKey("Comm. Recog. Entry No.");
+                    ApprovalEntry.SetRange("Comm. Recog. Entry No.", "Entry No.");
+                    ApprovalEntry.CalcSums("Amt. Remaining to Pay");
 
-                    InsertReportBufferRecog;
+                    InsertReportBufferRecog();
                 end;
 
                 trigger OnPreDataItem();
                 begin
-                    if TransactionFilter <> TransactionFilter::Recognized then
-                        CurrReport.BREAK;
+                    if TheTransactionFilter <> TheTransactionFilter::Recognized then
+                        CurrReport.Break();
 
-                    CommCustSalesperson.COPYFILTER("Date Filter", "Trigger Posting Date");
+                    CommCustSalesperson.CopyFilter("Date Filter", "Trigger Posting Date");
                 end;
             }
             dataitem("Comm. Approval Entry"; CommApprovalEntryTigCM)
             {
-                DataItemLink = "Customer No." = FIELD("Customer No.");
-                DataItemTableView = SORTING("Customer No.", "Trigger Posting Date", "Document Type", "Document No.");
+                DataItemLink = "Customer No." = field("Customer No.");
+                DataItemTableView = sorting("Customer No.", "Trigger Posting Date", "Document Type", "Document No.");
 
                 trigger OnAfterGetRecord();
                 begin
-                    CALCFIELDS("Comm. Amt. Paid");
-                    RecogEntry.GET("Comm. Recog. Entry No.");
-                    RecogEntry.CALCFIELDS("Basis Amt. Approved to Pay", "Basis Amt. Paid");
+                    CalcFields("Comm. Amt. Paid");
+                    RecogEntry.Get("Comm. Recog. Entry No.");
+                    RecogEntry.CalcFields("Basis Amt. Approved to Pay", "Basis Amt. Paid");
 
-                    InsertReportBufferAppr;
+                    InsertReportBufferAppr();
                 end;
 
                 trigger OnPreDataItem();
                 begin
-                    if TransactionFilter <> TransactionFilter::Approved then
-                        CurrReport.BREAK;
+                    if TheTransactionFilter <> TheTransactionFilter::Approved then
+                        CurrReport.Break();
 
-                    CommCustSalesperson.COPYFILTER("Date Filter", "Trigger Posting Date");
+                    CommCustSalesperson.CopyFilter("Date Filter", "Trigger Posting Date");
                 end;
             }
             dataitem("Comm. Payment Entry"; CommissionPaymentEntryTigCM)
             {
-                DataItemLink = "Customer No." = FIELD("Customer No.");
-                DataItemTableView = SORTING("Customer No.", "Date Paid", "Document No.");
+                DataItemLink = "Customer No." = field("Customer No.");
+                DataItemTableView = sorting("Customer No.", "Date Paid", "Document No.");
 
                 trigger OnAfterGetRecord();
                 begin
                     //Allow initialization entries having no link
-                    if RecogEntry.GET("Comm. Recog. Entry No.") then
-                        RecogEntry.CALCFIELDS("Basis Amt. Approved to Pay", "Basis Amt. Paid")
+                    if RecogEntry.Get("Comm. Recog. Entry No.") then
+                        RecogEntry.CalcFields("Basis Amt. Approved to Pay", "Basis Amt. Paid")
                     else
-                        CLEAR(RecogEntry);
+                        Clear(RecogEntry);
 
-                    InsertReportBufferPmt;
+                    InsertReportBufferPmt();
                 end;
 
                 trigger OnPreDataItem();
                 begin
-                    if TransactionFilter <> TransactionFilter::Paid then
-                        CurrReport.BREAK;
+                    if TheTransactionFilter <> TheTransactionFilter::Paid then
+                        CurrReport.Break();
 
-                    CommCustSalesperson.COPYFILTER("Date Filter", "Posting Date");
+                    CommCustSalesperson.CopyFilter("Date Filter", "Posting Date");
                 end;
             }
 
             trigger OnAfterGetRecord();
             begin
-                CALCFIELDS("Customer Name", "Salesperson Name");
+                CalcFields("Customer Name", "Salesperson Name");
             end;
 
             trigger OnPreDataItem();
             begin
-                Window.OPEN(Text002);
-                DateFilter := GETFILTER("Date Filter");
+                Window.Open(CalculatingLbl);
+                DateFilter := CopyStr(GetFilter("Date Filter"), 1, MaxStrLen(DateFilter));
             end;
         }
     }
@@ -104,34 +103,28 @@ report 80003 "Commission-CalcRptWkshtTigCM"
         {
             area(content)
             {
-                field("Transaction Type"; TransactionFilter)
+                field(TransactionFilter; TheTransactionFilter)
                 {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the Transaction Filter';
+                    OptionCaption = 'Recognized,Approved,Paid';
                 }
             }
         }
-
-        actions
-        {
-        }
-    }
-
-    labels
-    {
     }
 
     trigger OnPostReport();
     begin
-        CLEAR(Window);
-        MESSAGE(Text001);
+        Clear(Window);
+        Message(CompleteMsg);
     end;
 
     trigger OnPreReport();
     begin
-        ReportBuffer.SETRANGE("User ID", USERID);
-        ReportBuffer.DELETEALL;
+        ReportBuffer.SetRange("User ID", UserId());
+        ReportBuffer.DeleteAll();
         EntryNo := 1;
-
-        RunDateTime := CURRENTDATETIME;
+        RunDateTime := CurrentDateTime();
     end;
 
     var
@@ -139,25 +132,25 @@ report 80003 "Commission-CalcRptWkshtTigCM"
         RecogEntry: Record CommRecognitionEntryTigCM;
         ApprovalEntry: Record CommApprovalEntryTigCM;
         EntryNo: Integer;
-        RunDateTime: DateTime;
-        Window: Dialog;
-        Text001: Label 'Complete';
-        Text002: Label 'Calculating...';
-        TransactionFilter: Option Recognized,Approved,Paid;
         DateFilter: Text[30];
+        RunDateTime: DateTime;
+        TheTransactionFilter: Option Recognized,Approved,Paid;
+        Window: Dialog;
+        CompleteMsg: Label 'Complete';
+        CalculatingLbl: Label 'Calculating...';
 
     local procedure InsertReportBufferRecog();
     begin
         //Create both detail and summary records
         with ReportBuffer do begin
             //Summary
-            SETRANGE("Salesperson Code", CommCustSalesperson."Salesperson Code");
-            SETRANGE("Customer No.", CommCustSalesperson."Customer No.");
-            SETRANGE("Document Type", "Comm. Recognition Entry"."Document Type");
-            SETRANGE("Document No.", "Comm. Recognition Entry"."Document No.");
-            if not FINDFIRST then begin
-                INIT;
-                "User ID" := USERID;
+            SetRange("Salesperson Code", CommCustSalesperson."Salesperson Code");
+            SetRange("Customer No.", CommCustSalesperson."Customer No.");
+            SetRange("Document Type", "Comm. Recognition Entry"."Document Type");
+            SetRange("Document No.", "Comm. Recognition Entry"."Document No.");
+            if not FindFirst() then begin
+                Init();
+                "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
                 "Entry No." := EntryNo;
                 "Salesperson Code" := CommCustSalesperson."Salesperson Code";
                 "Salesperson Name" := CommCustSalesperson."Customer Name";
@@ -175,18 +168,18 @@ report 80003 "Commission-CalcRptWkshtTigCM"
                 Level := Level::Summary;
                 "Posted Doc. No." := "Comm. Recognition Entry"."Posted Doc. No.";
                 "Trigger Doc. No." := "Comm. Recognition Entry"."Trigger Document No.";
-                INSERT;
+                Insert();
                 EntryNo += 1;
             end else begin
                 "Basis Amt. Recognized" += "Comm. Recognition Entry"."Basis Amt.";
                 "Basis Amt. Approved to Pay" += "Comm. Recognition Entry"."Basis Amt. Approved to Pay";
                 "Comm. Amt. Paid" += "Comm. Recognition Entry"."Basis Amt. Paid";
-                MODIFY;
+                Modify();
             end;
 
             //Detail
-            INIT;
-            "User ID" := USERID;
+            Init();
+            "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
             "Entry No." := EntryNo;
             "Salesperson Code" := CommCustSalesperson."Salesperson Code";
             "Salesperson Name" := CommCustSalesperson."Customer Name";
@@ -204,7 +197,7 @@ report 80003 "Commission-CalcRptWkshtTigCM"
             Level := Level::Detail;
             "Posted Doc. No." := "Comm. Recognition Entry"."Posted Doc. No.";
             "Trigger Doc. No." := "Comm. Recognition Entry"."Trigger Document No.";
-            INSERT;
+            Insert();
             EntryNo += 1;
         end;
     end;
@@ -214,13 +207,13 @@ report 80003 "Commission-CalcRptWkshtTigCM"
         //Create both detail and summary records
         with ReportBuffer do begin
             //Summary
-            SETRANGE("Salesperson Code", CommCustSalesperson."Salesperson Code");
-            SETRANGE("Customer No.", CommCustSalesperson."Customer No.");
-            SETRANGE("Document Type", "Comm. Approval Entry"."Document Type");
-            SETRANGE("Document No.", "Comm. Approval Entry"."Document No.");
-            if not FINDFIRST then begin
-                INIT;
-                "User ID" := USERID;
+            SetRange("Salesperson Code", CommCustSalesperson."Salesperson Code");
+            SetRange("Customer No.", CommCustSalesperson."Customer No.");
+            SetRange("Document Type", "Comm. Approval Entry"."Document Type");
+            SetRange("Document No.", "Comm. Approval Entry"."Document No.");
+            if not FindFirst() then begin
+                Init();
+                "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
                 "Entry No." := EntryNo;
                 "Salesperson Code" := CommCustSalesperson."Salesperson Code";
                 "Salesperson Name" := CommCustSalesperson."Customer Name";
@@ -238,18 +231,18 @@ report 80003 "Commission-CalcRptWkshtTigCM"
                 Level := Level::Summary;
                 "Posted Doc. No." := "Comm. Approval Entry"."Posted Doc. No.";
                 "Trigger Doc. No." := "Comm. Approval Entry"."Trigger Document No.";
-                INSERT;
+                Insert();
                 EntryNo += 1;
             end else begin
                 "Basis Amt. Recognized" += RecogEntry."Basis Amt.";
                 "Basis Amt. Approved to Pay" += RecogEntry."Basis Amt. Approved to Pay";
                 "Comm. Amt. Paid" += RecogEntry."Basis Amt. Paid";
-                MODIFY;
+                Modify();
             end;
 
             //Detail
-            INIT;
-            "User ID" := USERID;
+            Init();
+            "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
             "Entry No." := EntryNo;
             "Salesperson Code" := CommCustSalesperson."Salesperson Code";
             "Salesperson Name" := CommCustSalesperson."Customer Name";
@@ -267,7 +260,7 @@ report 80003 "Commission-CalcRptWkshtTigCM"
             Level := Level::Detail;
             "Posted Doc. No." := "Comm. Approval Entry"."Posted Doc. No.";
             "Trigger Doc. No." := "Comm. Approval Entry"."Trigger Document No.";
-            INSERT;
+            Insert();
             EntryNo += 1;
         end;
     end;
@@ -277,13 +270,13 @@ report 80003 "Commission-CalcRptWkshtTigCM"
         //Create both detail and summary records
         with ReportBuffer do begin
             //Summary
-            SETRANGE("Salesperson Code", CommCustSalesperson."Salesperson Code");
-            SETRANGE("Customer No.", CommCustSalesperson."Customer No.");
-            SETRANGE("Document Type", RecogEntry."Document Type");
-            SETRANGE("Document No.", RecogEntry."Document No.");
-            if not FINDFIRST then begin
-                INIT;
-                "User ID" := USERID;
+            SetRange("Salesperson Code", CommCustSalesperson."Salesperson Code");
+            SetRange("Customer No.", CommCustSalesperson."Customer No.");
+            SetRange("Document Type", RecogEntry."Document Type");
+            SetRange("Document No.", RecogEntry."Document No.");
+            if not FindFirst() then begin
+                Init();
+                "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
                 "Entry No." := EntryNo;
                 "Salesperson Code" := CommCustSalesperson."Salesperson Code";
                 "Salesperson Name" := CommCustSalesperson."Customer Name";
@@ -301,18 +294,18 @@ report 80003 "Commission-CalcRptWkshtTigCM"
                 Level := Level::Summary;
                 "Posted Doc. No." := "Comm. Payment Entry"."Posted Doc. No.";
                 "Trigger Doc. No." := "Comm. Payment Entry"."Trigger Document No.";
-                INSERT;
+                Insert();
                 EntryNo += 1;
             end else begin
                 "Basis Amt. Recognized" += RecogEntry."Basis Amt.";
                 "Basis Amt. Approved to Pay" += RecogEntry."Basis Amt. Approved to Pay";
                 "Comm. Amt. Paid" += RecogEntry."Basis Amt. Paid";
-                MODIFY;
+                Modify();
             end;
 
             //Detail
-            INIT;
-            "User ID" := USERID;
+            Init();
+            "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
             "Entry No." := EntryNo;
             "Salesperson Code" := CommCustSalesperson."Salesperson Code";
             "Salesperson Name" := CommCustSalesperson."Customer Name";
@@ -330,15 +323,14 @@ report 80003 "Commission-CalcRptWkshtTigCM"
             Level := Level::Detail;
             "Posted Doc. No." := "Comm. Payment Entry"."Posted Doc. No.";
             "Trigger Doc. No." := "Comm. Payment Entry"."Trigger Document No.";
-            INSERT;
+            Insert();
             EntryNo += 1;
         end;
     end;
 
     procedure GetReportFilters(var TransactionFilter2: Option Recognized,Approved,Paid; var DateFilter2: Text[30]);
     begin
-        TransactionFilter2 := TransactionFilter;
+        TransactionFilter2 := TheTransactionFilter;
         DateFilter2 := DateFilter;
     end;
 }
-

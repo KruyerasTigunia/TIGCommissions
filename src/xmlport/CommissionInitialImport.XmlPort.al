@@ -1,7 +1,5 @@
 xmlport 50070 "CommissionInitialImportTigCM"
 {
-    // version TIGCOMMCust
-
     FieldDelimiter = '<None>';
     FieldSeparator = '<TAB>';
     Format = VariableText;
@@ -29,61 +27,60 @@ xmlport 50070 "CommissionInitialImportTigCM"
                 }
 
                 trigger OnBeforeInsertRecord();
+                var
+                    Pct: Decimal;
                 begin
-                    pcttext := COPYSTR(pcttext, 1, STRLEN(pcttext) - 1);
-                    EVALUATE(Pct, pcttext);
-                    //IF Pct = 0 THEN
-                    //  EXIT;
+                    pcttext := CopyStr(pcttext, 1, STRLEN(pcttext) - 1);
+                    Evaluate(Pct, pcttext);
 
-                    //Combine accounts
+                    //FIXME - seems like a hard coded values for individual implementation
+                    //        should not be part of an app -> should be fixed in data
                     if (salespersoncode = 'ENCHANT-SE') or (salespersoncode = 'ENCHANT-NE') then
                         salespersoncode := 'ENCHANT';
 
-                    CommImport.INIT;
+                    CommImport.Init();
                     CommImport."Salesperson Code" := salespersoncode;
                     CommImport."Customer No." := CustCode;
                     CommImport."Comm. Rate" := Pct;
-                    CommImport.INSERT;
-                    exit;
+                    CommImport.Insert();
                 end;
             }
         }
     }
 
-    requestpage
-    {
-
-        layout
-        {
-        }
-
-        actions
-        {
-        }
-    }
+    var
+        CommImport: Record CommissionInitialImportTigCM;
 
     trigger OnPostXmlPort();
+    var
+        CommissionInitialImportMgt: Codeunit CommissionInitialImpMgtTigCM;
+        CommCode: Code[20];
+        CommPlanCode: Code[20];
+        LastSalespersonCode: Code[20];
+        LastRate: Decimal;
+        DistributionMethod: Option Vendor,"External Provider",Manual;
+        RecogTriggerMethod: Option Booking,Shipment,Invoice,Payment;
+        PayableTriggerMethod: Option Booking,Shipment,Invoice,Payment;
+        UnitType: Option " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)",,All;
+        CompleteMsg: Label 'Complete';
     begin
         //Calculate commission plan codes
-        CommImport.FINDSET;
-        CommCode := CommImport."Salesperson Code" + '-' + FORMAT(CommImport."Comm. Rate");
+        CommImport.FindSet();
+        CommCode := CopyStr(CommImport."Salesperson Code" + '-' + Format(CommImport."Comm. Rate"), 1, MaxStrLen(CommCode));
         LastSalespersonCode := CommImport."Salesperson Code";
         LastRate := CommImport."Comm. Rate";
         repeat
-            if CommImport."Salesperson Code" <> LastSalespersonCode then begin
-                CommCode := CommImport."Salesperson Code" + '-' + FORMAT(CommImport."Comm. Rate");
-            end;
-
-            if CommImport."Comm. Rate" <> LastRate then begin
-                CommCode := CommImport."Salesperson Code" + '-' + FORMAT(CommImport."Comm. Rate");
+            if not ((CommImport."Salesperson Code" = LastSalespersonCode) and
+                    (CommImport."Comm. Rate" = LastRate)) then begin
+                CommCode := CopyStr(CommImport."Salesperson Code" + '-' + Format(CommImport."Comm. Rate"), 1, MaxStrLen(CommCode));
             end;
 
             CommImport."Comm. Code" := CommCode;
-            CommImport.MODIFY;
+            CommImport.Modify();
 
             LastSalespersonCode := CommImport."Salesperson Code";
             LastRate := CommImport."Comm. Rate";
-        until CommImport.NEXT = 0;
+        until CommImport.Next() = 0;
 
         //Create setups
         RecogTriggerMethod := RecogTriggerMethod::Shipment;
@@ -91,44 +88,21 @@ xmlport 50070 "CommissionInitialImportTigCM"
         DistributionMethod := DistributionMethod::Manual;
         UnitType := UnitType::Item;
 
-        CommWizardMgt.DeleteSetupData;
-        CommWizardMgt.CreateCommSetup(RecogTriggerMethod, PayableTriggerMethod);
+        CommissionInitialImportMgt.DeleteSetupData();
+        CommissionInitialImportMgt.CreateCommSetup(RecogTriggerMethod, PayableTriggerMethod);
         //CommWizardMgt.CreatePayableVendors;
-        CommWizardMgt.CreateCommPlan('', UnitType::Item, '', false);
-        CommWizardMgt.CreateCommPlanCalcLine(CommPlanCode, 0);
-        CommWizardMgt.CreateCommPlanPayee(CommPlanCode, '', DistributionMethod, '');
-        CommWizardMgt.CreateCommCustGroup('');
-        CommWizardMgt.CreateCommCustSalesperson;
+        CommissionInitialImportMgt.CreateCommPlan('', UnitType::Item, '', false);
+        CommissionInitialImportMgt.CreateCommPlanCalcLine(CommPlanCode, 0);
+        CommissionInitialImportMgt.CreateCommPlanPayee(CommPlanCode, '', DistributionMethod, '');
+        CommissionInitialImportMgt.CreateCommCustGroup('');
+        CommissionInitialImportMgt.CreateCommCustSalesperson();
 
-        MESSAGE('Complete');
+        Message(CompleteMsg);
     end;
 
     trigger OnPreXmlPort();
     begin
-        CommImport.DELETEALL;
+        CommImport.Reset();
+        CommImport.DeleteAll();
     end;
-
-    var
-        CommImport: Record CommissionInitialImportTigCM;
-        CommWizardMgt: Codeunit CommissionInitialImpMgtTigCM;
-        Pct: Decimal;
-        CommCode: Code[20];
-        LastSalespersonCode: Code[20];
-        LastRate: Decimal;
-        Text001: Label 'The Setup Wizard has already been run.';
-        Text002: Label 'Action Complete.';
-        Text003: Label 'You must specify a Global Commission Rate.';
-        Text004: Label 'Commission Setup not complete.';
-        Text005: Label 'You must perform this step manually.\%1\Is this step completed?';
-        Text006: Label 'Please return to this step and confirm when completed.';
-        Text007: Label 'You must complete the prior step first.';
-        Text008: Label 'Feature not enabled.';
-        Text009: Label 'Setups Complete.';
-        Text010: Label 'You must specify an Expense Account for invoice lines.';
-        DistributionMethod: Option Vendor,"External Provider",Manual;
-        RecogTriggerMethod: Option Booking,Shipment,Invoice,Payment;
-        PayableTriggerMethod: Option Booking,Shipment,Invoice,Payment;
-        CommPlanCode: Code[20];
-        UnitType: Option " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)",,All;
 }
-

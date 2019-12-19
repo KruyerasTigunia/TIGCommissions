@@ -8,4 +8,8 @@ tableextension 80000 "SalesShipmentHeaderTigCM" extends "Sales Shipment Header"
             DataClassification = CustomerContent;
         }
     }
+    keys
+    {
+        key(Key80000; CommissionCalculatedTigCM) { }
+    }
 }

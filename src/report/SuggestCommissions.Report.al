@@ -1,7 +1,8 @@
 report 80000 "SuggestCommissionsTigCM"
 {
-    // version TIGCOMM1.0
-
+    Caption = 'Suggest Commissions';
+    ApplicationArea = All;
+    UsageCategory = Tasks;
     ProcessingOnly = true;
 
     dataset
@@ -13,7 +14,7 @@ report 80000 "SuggestCommissionsTigCM"
             trigger OnPreDataItem();
             begin
                 //Filtering only
-                CurrReport.BREAK;
+                CurrReport.Break();
             end;
         }
         dataitem("Salesperson/Purchaser"; "Salesperson/Purchaser")
@@ -23,27 +24,27 @@ report 80000 "SuggestCommissionsTigCM"
             trigger OnPreDataItem();
             begin
                 //Filtering only
-                CurrReport.BREAK;
+                CurrReport.Break();
             end;
         }
         dataitem("Comm. Approval Entry"; CommApprovalEntryTigCM)
         {
-            DataItemTableView = SORTING("Customer No.", Open) WHERE(Open = CONST(true));
+            DataItemTableView = sorting("Customer No.", Open) where(Open = const(true));
 
             trigger OnAfterGetRecord();
             begin
                 //Factor in pending worksheet lines and pending payment entries
-                CALCFIELDS("Basis Qty. (Wksht.)", "Qty. Paid");
+                CalcFields("Basis Qty. (Wksht.)", "Qty. Paid");
                 //Allow for credit memos
-                if ABS("Basis Qty. Approved") <= ABS(("Basis Qty. (Wksht.)" + "Qty. Paid")) then
-                    CurrReport.SKIP;
+                if Abs("Basis Qty. Approved") <= Abs(("Basis Qty. (Wksht.)" + "Qty. Paid")) then
+                    CurrReport.Skip();
 
                 SuggestCommissions.CalculateCommission("Comm. Approval Entry", BatchName);
             end;
 
             trigger OnPreDataItem();
             begin
-                Customer.COPYFILTER("No.", "Customer No.");
+                Customer.CopyFilter("No.", "Customer No.");
                 SuggestCommissions.InitCalculation(BatchName, PostingDate, PayoutDate);
                 SuggestCommissions.SetSalespersonFilter("Salesperson/Purchaser");
             end;
@@ -58,54 +59,49 @@ report 80000 "SuggestCommissionsTigCM"
         {
             area(content)
             {
-                field(PostingDate; PostingDate)
+                field(ThePostingDate; PostingDate)
                 {
                     Caption = 'Posting Date';
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the Posting Date';
                 }
-                field(PayoutDate; PayoutDate)
+                field(ThePayoutDate; PayoutDate)
                 {
                     Caption = 'Payout Date';
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the Payout Date';
                 }
             }
         }
-
-        actions
-        {
-        }
-    }
-
-    labels
-    {
     }
 
     trigger OnPostReport();
     begin
-        MESSAGE(Text004);
+        MESSAGE(CompleteMsg);
     end;
 
     trigger OnPreReport();
     begin
         if BatchName = '' then
-            ERROR(Text001);
+            Error(BatchNameErr);
         if PostingDate = 0D then
-            ERROR(Text002);
+            Error(PostingDateErr);
         if PayoutDate = 0D then
-            ERROR(Text003);
+            Error(PayoutDateErr);
     end;
 
     var
         SuggestCommissions: Codeunit CalculateCommissionTigCM;
         BatchName: Code[20];
-        Text001: Label 'You must specify a Batch Name';
         PostingDate: Date;
         PayoutDate: Date;
-        Text002: Label 'You must specify Posting Date';
-        Text003: Label 'You must specify Payout Date';
-        Text004: Label 'Complete';
+        BatchNameErr: Label 'You must specify a Batch Name';
+        PostingDateErr: Label 'You must specify Posting Date';
+        PayoutDateErr: Label 'You must specify Payout Date';
+        CompleteMsg: Label 'Complete';
 
     procedure SetBatch(NewBatchName: Code[20]);
     begin
         BatchName := NewBatchName;
     end;
 }
-

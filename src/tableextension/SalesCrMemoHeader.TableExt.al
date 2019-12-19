@@ -8,4 +8,8 @@ tableextension 80002 "SalesCrMemoHeaderTigCM" extends "Sales Cr.Memo Header"
             DataClassification = CustomerContent;
         }
     }
+    keys
+    {
+        key(Key80000; CommissionCalculatedTigCM) { }
+    }
 }

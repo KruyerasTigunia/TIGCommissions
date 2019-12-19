@@ -8,4 +8,8 @@ tableextension 80003 "DetailedCustLedgEntryTigCM" extends "Detailed Cust. Ledg. 
             DataClassification = CustomerContent;
         }
     }
+    keys
+    {
+        key(Key80000; CommissionCalculatedTigCM) { }
+    }
 }
