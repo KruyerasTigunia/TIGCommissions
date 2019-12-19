@@ -1,9 +1,7 @@
 table 80011 "CommissionSetupSummaryTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Setup Summary';
+    DataClassification = CustomerContent;
     DrillDownPageID = CommReportWorksheetTigCM;
     LookupPageID = CommReportWorksheetTigCM;
 
@@ -11,47 +9,64 @@ table 80011 "CommissionSetupSummaryTigCM"
     {
         field(10; "User ID"; Code[50])
         {
+            Caption = 'User ID';
+            DataClassification = CustomerContent;
         }
         field(20; "Entry No."; Integer)
         {
+            Caption = 'Entry No.';
+            DataClassification = CustomerContent;
         }
         field(30; "Customer No."; Code[20])
         {
-            TableRelation = Customer;
+            Caption = 'Customer No.';
+            DataClassification = CustomerContent;
+            TableRelation = Customer."No.";
         }
         field(40; "Cust. Salesperson Code"; Code[20])
         {
-            TableRelation = "Salesperson/Purchaser";
+            Caption = 'Customer Salesperson Code';
+            DataClassification = CustomerContent;
+            TableRelation = "Salesperson/Purchaser".Code;
         }
         field(45; "Pay Salesperson Code"; Code[20])
         {
-            TableRelation = "Salesperson/Purchaser";
+            Caption = 'Pay Salesperson Code';
+            DataClassification = CustomerContent;
+            TableRelation = "Salesperson/Purchaser".Code;
         }
         field(50; "Comm. Plan Code"; Code[20])
         {
-            TableRelation = CommissionPlanTigCM;
+            Caption = 'Commission Plan Code';
+            DataClassification = CustomerContent;
+            TableRelation = CommissionPlanTigCM.Code;
         }
         field(60; "Commission Rate"; Decimal)
         {
+            Caption = 'Commission Rate';
+            DataClassification = CustomerContent;
         }
         field(1000; "Customer Name"; Text[50])
         {
-            CalcFormula = Lookup (Customer.Name WHERE("No." = FIELD("Customer No.")));
-            Editable = false;
+            Caption = 'Customer Name';
             FieldClass = FlowField;
+            CalcFormula = Lookup (Customer.Name where("No." = field("Customer No.")));
+            Editable = false;
         }
         field(1010; "Salesperson Name"; Text[50])
         {
-            CalcFormula = Lookup ("Salesperson/Purchaser".Name WHERE(Code = FIELD("Cust. Salesperson Code")));
-            Editable = false;
+            Caption = 'Salesperson Name';
             FieldClass = FlowField;
+            CalcFormula = Lookup ("Salesperson/Purchaser".Name where(Code = field("Cust. Salesperson Code")));
+            Editable = false;
         }
     }
 
     keys
     {
-        key(Key1; "User ID", "Entry No.")
+        key(PK; "User ID", "Entry No.")
         {
+            Clustered = true;
         }
         key(Key2; "Customer No.", "Cust. Salesperson Code")
         {
@@ -68,4 +83,3 @@ table 80011 "CommissionSetupSummaryTigCM"
         }
     }
 }
-

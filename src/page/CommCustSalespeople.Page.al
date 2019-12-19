@@ -28,16 +28,9 @@ page 80018 "CommCustSalespeopleTigCM"
         }
     }
 
-    actions
-    {
-        area(processing)
-        {
-        }
-    }
-
     trigger OnClosePage();
     begin
-        SynchCustomer;
+        SynchCustomer();
     end;
 }
 

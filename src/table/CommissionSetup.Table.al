@@ -1,87 +1,95 @@
 table 80015 "CommissionSetupTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Setup';
+    DataClassification = CustomerContent;
 
     fields
     {
         field(10; "Primary Key"; Code[10])
         {
-            CaptionML = ENU = 'Primary Key',
-                        ESM = 'Clave primaria',
-                        FRC = 'Clé primaire',
-                        ENC = 'Primary Key';
+            Caption = 'Primary Key';
+            DataClassification = CustomerContent;
         }
         field(20; "Def. Commission Type"; Option)
         {
-            OptionCaption = 'Percent';
+            Caption = 'Default Commission Type';
+            DataClassification = CustomerContent;
             OptionMembers = Percent,"Fixed";
+            OptionCaption = 'Percent';
         }
         field(30; "Def. Commission Basis"; Option)
         {
-            InitValue = "Line Amount";
-            OptionCaption = ',,,Line Amount';
+            Caption = 'Default Commission Basis';
+            DataClassification = CustomerContent;
             OptionMembers = "Order Margin","Order Amount","Line Margin","Line Amount","Line Qty.";
+            OptionCaption = ',,,Line Amount';
+            InitValue = "Line Amount";
         }
         field(40; "Recog. Trigger Method"; Option)
         {
-            InitValue = Shipment;
+            Caption = 'Recognition Trigger Method';
+            DataClassification = CustomerContent;
             OptionMembers = Booking,Shipment,Invoice,Payment;
+            OptionCaption = 'Booking,Shipment,Invoice,Payment';
+            InitValue = Shipment;
 
             trigger OnValidate();
             begin
                 if "Recog. Trigger Method" <> xRec."Recog. Trigger Method" then begin
-                    if CommPlan.FINDSET then begin
+                    if CommPlan.FindSet() then begin
                         repeat
-                            CommPlan.VALIDATE("Recognition Trigger Method", "Recog. Trigger Method");
-                            CommPlan.MODIFY;
-                        until CommPlan.NEXT = 0;
+                            CommPlan.Validate("Recognition Trigger Method", "Recog. Trigger Method");
+                            CommPlan.Modify();
+                        until CommPlan.Next() = 0;
                     end;
                 end;
             end;
         }
         field(50; "Payable Trigger Method"; Option)
         {
-            InitValue = Shipment;
+            Caption = 'Payable Trigger Method';
+            DataClassification = CustomerContent;
             OptionMembers = Booking,Shipment,Invoice,Payment;
+            OptionCaption = 'Booking,Shipment,Invoice,Payment';
+            InitValue = Shipment;
 
             trigger OnValidate();
             begin
                 if "Payable Trigger Method" <> xRec."Payable Trigger Method" then begin
-                    if CommPlan.FINDSET then begin
+                    if CommPlan.FindSet() then begin
                         repeat
-                            CommPlan.VALIDATE("Payable Trigger Method", "Payable Trigger Method");
-                            CommPlan.MODIFY;
-                        until CommPlan.NEXT = 0;
+                            CommPlan.Validate("Payable Trigger Method", "Payable Trigger Method");
+                            CommPlan.Modify();
+                        until CommPlan.Next() = 0;
                     end;
                 end;
             end;
         }
         field(190; Disabled; Boolean)
         {
+            Caption = 'Disabled';
+            DataClassification = CustomerContent;
         }
         field(200; "Wizard Run"; Boolean)
         {
+            Caption = 'Wizard Run';
+            DataClassification = CustomerContent;
         }
         field(210; "Initial Data Extract Date"; Date)
         {
+            Caption = 'Initial Data Extract Date';
+            DataClassification = CustomerContent;
         }
     }
 
     keys
     {
-        key(Key1; "Primary Key")
+        key(PK; "Primary Key")
         {
+            Clustered = true;
         }
-    }
-
-    fieldgroups
-    {
     }
 
     var
         CommPlan: Record CommissionPlanTigCM;
 }
-

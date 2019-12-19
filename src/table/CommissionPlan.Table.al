@@ -1,5 +1,7 @@
 table 80000 "CommissionPlanTigCM"
 {
+    Caption = 'Commission Plan';
+    DataClassification = CustomerContent;
     DrillDownPageID = CommissionPlanListTigCM;
     LookupPageID = CommissionPlanListTigCM;
 
@@ -7,47 +9,59 @@ table 80000 "CommissionPlanTigCM"
     {
         field(10; "Code"; Code[20])
         {
+            Caption = 'Code';
+            DataClassification = CustomerContent;
         }
         field(20; Description; Text[50])
         {
+            Caption = 'Description';
+            DataClassification = CustomerContent;
         }
         field(30; "Manager Level"; Boolean)
         {
+            Caption = 'Manager Level';
+            DataClassification = CustomerContent;
 
             trigger OnValidate();
             begin
-                UpdatePlanPayees;
+                UpdatePlanPayees();
             end;
         }
         field(40; "Source Type"; Option)
         {
+            Caption = 'Source Type';
+            DataClassification = CustomerContent;
             OptionMembers = Customer,Vendor;
+            OptionCaption = 'Customer,Vendor';
 
             trigger OnValidate();
             begin
                 if "Source Type" = "Source Type"::Vendor then
-                    ERROR(FeatureNotEnabled);
+                    Error(FeatureNotEnabledErr);
 
                 if "Source Type" <> xRec."Source Type" then begin
-                    CLEAR("Source Method");
-                    CLEAR("Source Method Code");
-                    CLEAR("Unit Method");
-                    CLEAR("Unit Method Code");
-                    CLEAR("Commission Type");
-                    CLEAR("Commission Basis");
-                    CLEAR("Recognition Trigger Method");
-                    CLEAR("Payable Trigger Method");
+                    Clear("Source Method");
+                    Clear("Source Method Code");
+                    Clear("Unit Method");
+                    Clear("Unit Method Code");
+                    Clear("Commission Type");
+                    Clear("Commission Basis");
+                    Clear("Recognition Trigger Method");
+                    Clear("Payable Trigger Method");
                 end;
             end;
         }
         field(50; "Source Method"; Option)
         {
+            Caption = 'Source Method';
+            DataClassification = CustomerContent;
             OptionMembers = All,Group,Specific;
+            OptionCaption = 'All,Group,Specific';
 
             trigger OnValidate();
             begin
                 if "Source Method" <> xRec."Source Method" then
-                    CLEAR("Source Method Code");
+                    Clear("Source Method Code");
 
                 case "Source Method" of
                     "Source Method"::All:
@@ -61,75 +75,93 @@ table 80000 "CommissionPlanTigCM"
         }
         field(60; "Source Method Code"; Code[20])
         {
+            Caption = 'Source Method Code';
+            DataClassification = CustomerContent;
             TableRelation = IF ("Source Type" = CONST(Customer),
                                 "Source Method" = CONST(Specific)) Customer."No."
             ELSE
             IF ("Source Type" = CONST(Customer),
-                                         "Source Method" = CONST(Group)) CommissionCustomerGroupTigCM.Code
+                "Source Method" = CONST(Group)) CommissionCustomerGroupTigCM.Code
             ELSE
             IF ("Source Type" = CONST(Vendor),
-                                                  "Source Method" = CONST(Specific)) Vendor."No."
+                "Source Method" = CONST(Specific)) Vendor."No."
             ELSE
             IF ("Source Type" = CONST(Vendor),
-                                                           "Source Method" = CONST(Group)) CommissionVendorGroupTigCM.Code;
+                "Source Method" = CONST(Group)) CommissionVendorGroupTigCM.Code;
         }
         field(70; "Unit Type"; Option)
         {
+            Caption = 'Unit Type';
+            DataClassification = CustomerContent;
             OptionMembers = " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)",,All;
+            OptionCaption = ' ,G/L Account,Item,Resource,Fixed Asset,Charge (Item),,All';
 
             trigger OnValidate();
             begin
                 if "Unit Type" <> xRec."Unit Type" then begin
-                    CLEAR("Unit Method");
-                    CLEAR("Unit Method Code");
+                    Clear("Unit Method");
+                    Clear("Unit Method Code");
                 end;
             end;
         }
         field(80; "Unit Method"; Option)
         {
+            Caption = 'Unit Method';
+            DataClassification = CustomerContent;
             OptionMembers = All,Group,Specific;
+            OptionCaption = 'All,Group,Specific';
 
             trigger OnValidate();
             begin
                 if "Unit Method" <> xRec."Unit Method" then
-                    CLEAR("Unit Method Code");
+                    Clear("Unit Method Code");
             end;
         }
         field(90; "Unit Method Code"; Code[20])
         {
+            Caption = 'Unit Method Code';
+            DataClassification = CustomerContent;
             TableRelation = IF ("Unit Type" = CONST("G/L Account"),
                                 "Unit Method" = CONST(Specific)) "G/L Account"."No."
             ELSE
             IF ("Unit Type" = CONST(Item),
-                                         "Unit Method" = CONST(Specific)) Item."No."
+                "Unit Method" = CONST(Specific)) Item."No."
             ELSE
             IF ("Unit Type" = CONST(Resource),
-                                                  "Unit Method" = CONST(Specific)) Resource."No."
+                "Unit Method" = CONST(Specific)) Resource."No."
             ELSE
             IF ("Unit Method" = CONST(Group)) CommissionUnitGroupTigCM.Code;
         }
         field(100; "Commission Type"; Option)
         {
-            OptionCaption = 'Percent';
+            Caption = 'Commission Type';
+            DataClassification = CustomerContent;
             OptionMembers = Percent,"Fixed";
+            OptionCaption = 'Percent,Fixed';
 
             trigger OnValidate();
             begin
                 if "Commission Type" = "Commission Type"::Fixed then
-                    ERROR(FeatureNotEnabled);
+                    Error(FeatureNotEnabledErr);
 
                 if "Commission Type" <> xRec."Commission Type" then
-                    CLEAR("Commission Basis");
+                    Clear("Commission Basis");
             end;
         }
         field(110; "Commission Basis"; Option)
         {
-            OptionCaption = ',,,Line Amount';
+            Caption = 'Commission Basis';
+            DataClassification = CustomerContent;
             OptionMembers = "Order Margin","Order Amount","Line Margin","Line Amount","Line Qty.";
+            OptionCaption = ',,,Line Amount';
+            InitValue = "Line Amount";
         }
         field(120; "Recognition Trigger Method"; Option)
         {
+            Caption = 'Recognition Trigger Method';
+            DataClassification = CustomerContent;
             OptionMembers = Booking,Shipment,Invoice,Payment;
+            OptionCaption = 'Booking,Shipment,Invoice,Payment';
 
             trigger OnValidate();
             begin
@@ -139,35 +171,45 @@ table 80000 "CommissionPlanTigCM"
         }
         field(130; "Payable Trigger Method"; Option)
         {
+            Caption = 'Payable Trigger Method';
+            DataClassification = CustomerContent;
             OptionMembers = Booking,Shipment,Invoice,Payment;
+            OptionCaption = 'Booking,Shipment,Invoice,Payment';
 
             trigger OnValidate();
             begin
                 if "Payable Trigger Method" < "Recognition Trigger Method" then
-                    ERROR(Text001);
+                    Error(PayableBeforeRecogTriggerErr);
             end;
         }
         field(140; "Pay On Invoice Discounts"; Boolean)
         {
+            Caption = 'Pay On Invoice Discounts';
+            DataClassification = CustomerContent;
 
             trigger OnValidate();
             begin
                 if "Pay On Invoice Discounts" then
-                    ERROR(FeatureNotEnabled);
+                    Error(FeatureNotEnabledErr);
             end;
         }
         field(200; Disabled; Boolean)
         {
+            Caption = 'Disabled';
+            DataClassification = CustomerContent;
         }
         field(1000; "Source Method Sort"; Integer)
         {
+            Caption = 'Source Method Sort';
+            DataClassification = CustomerContent;
         }
     }
 
     keys
     {
-        key(Key1; "Code")
+        key(PK; "Code")
         {
+            Clustered = true;
         }
         key(Key2; "Unit Type", "Unit Method", "Unit Method Code", "Source Type", "Source Method", "Source Method Code")
         {
@@ -180,51 +222,47 @@ table 80000 "CommissionPlanTigCM"
         }
     }
 
-    fieldgroups
-    {
-    }
+    var
+        CommPlanPayee: Record CommissionPlanPayeeTigCM;
+        CommPlanCalc: Record CommissionPlanCalculationTigCM;
+        FeatureNotEnabledErr: Label 'Feature not enabled.';
+        PayableBeforeRecogTriggerErr: Label 'Payable Trigger Method cannot be before Recognition Trigger Method.';
+        DeleteNotAllowedErr: Label 'Entries exist. Delete not allowed. Disable this plan instead.';
 
     trigger OnDelete();
     begin
-        if EntriesExist then
-            ERROR(Text003);
+        if EntriesExist() then
+            Error(DeleteNotAllowedErr);
 
-        CommPlanPayee.SETRANGE("Commission Plan Code", Code);
-        CommPlanPayee.DELETEALL(true);
-        CommPlanCalc.SETRANGE("Commission Plan Code", Code);
-        CommPlanCalc.DELETEALL(true);
+        CommPlanPayee.SetRange("Commission Plan Code", Code);
+        CommPlanPayee.DeleteAll(true);
+        CommPlanCalc.SetRange("Commission Plan Code", Code);
+        CommPlanCalc.DeleteAll(true);
     end;
 
     trigger OnInsert();
     begin
-        InitDefaultValues;
+        InitDefaultValues();
     end;
-
-    var
-        FeatureNotEnabled: Label 'Feature not enabled.';
-        Text001: Label 'Payable Trigger Method cannot be before Recognition Trigger Method.';
-        CommPlanPayee: Record CommissionPlanPayeeTigCM;
-        CommPlanCalc: Record CommissionPlanCalculationTigCM;
-        Text003: Label 'Entries exist. Delete not allowed. Disable this plan instead.';
 
     local procedure InitDefaultValues();
     var
         CommSetup: Record CommissionSetupTigCM;
     begin
-        CommSetup.GET;
-        VALIDATE("Commission Type", CommSetup."Def. Commission Type");
-        VALIDATE("Commission Basis", CommSetup."Def. Commission Basis");
-        VALIDATE("Recognition Trigger Method", CommSetup."Recog. Trigger Method");
-        VALIDATE("Payable Trigger Method", CommSetup."Payable Trigger Method");
+        CommSetup.Get();
+        Validate("Commission Type", CommSetup."Def. Commission Type");
+        Validate("Commission Basis", CommSetup."Def. Commission Basis");
+        Validate("Recognition Trigger Method", CommSetup."Recog. Trigger Method");
+        Validate("Payable Trigger Method", CommSetup."Payable Trigger Method");
     end;
 
     local procedure UpdatePlanPayees();
     var
-        CommPlanPayee: Record CommissionPlanPayeeTigCM;
+        MyCommPlanPayee: Record CommissionPlanPayeeTigCM;
     begin
         if not "Manager Level" then begin
-            CommPlanPayee.SETRANGE("Commission Plan Code", Code);
-            CommPlanPayee.MODIFYALL("Manager Split Pct.", 0);
+            MyCommPlanPayee.SetRange("Commission Plan Code", Code);
+            MyCommPlanPayee.ModifyAll("Manager Split Pct.", 0);
         end;
     end;
 
@@ -232,9 +270,8 @@ table 80000 "CommissionPlanTigCM"
     var
         CommRecogEntry: Record CommRecognitionEntryTigCM;
     begin
-        CommRecogEntry.SETCURRENTKEY("Commission Plan Code");
-        CommRecogEntry.SETRANGE("Commission Plan Code", Code);
-        exit(not CommRecogEntry.ISEMPTY);
+        CommRecogEntry.SetCurrentKey("Commission Plan Code");
+        CommRecogEntry.SetRange("Commission Plan Code", Code);
+        exit(not CommRecogEntry.IsEmpty());
     end;
 }
-

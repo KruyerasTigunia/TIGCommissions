@@ -9,13 +9,13 @@ table 50045 "CommissionInitialImportTigCM"
         {
             Caption = 'Salesperson Code';
             DataClassification = CustomerContent;
-            TableRelation = "Salesperson/Purchaser";
+            TableRelation = "Salesperson/Purchaser".Code;
         }
         field(20; "Customer No."; Code[20])
         {
             Caption = 'Customer No.';
             DataClassification = CustomerContent;
-            TableRelation = "Cust. Ledger Entry";
+            TableRelation = Customer."No.";
         }
         field(30; "Comm. Rate"; Decimal)
         {

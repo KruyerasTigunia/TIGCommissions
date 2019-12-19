@@ -1,31 +1,29 @@
 table 80010 "CommissionVendorGrpMemberTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Vendor Group Member';
+    DataClassification = CustomerContent;
 
     fields
     {
         field(10; "Commission Vendor Group Code"; Code[20])
         {
-            TableRelation = Table80020;
+            Caption = '';
+            DataClassification = CustomerContent;
+            TableRelation = CommissionVendorGroupTigCM.Code;
         }
         field(20; "Vendor No."; Code[20])
         {
-            TableRelation = Vendor;
+            Caption = 'Vendor No.';
+            DataClassification = CustomerContent;
+            TableRelation = Vendor."No.";
         }
     }
 
     keys
     {
-        key(Key1; "Commission Vendor Group Code", "Vendor No.")
+        key(PK; "Commission Vendor Group Code", "Vendor No.")
         {
+            Clustered = true;
         }
     }
-
-    fieldgroups
-    {
-    }
 }
-

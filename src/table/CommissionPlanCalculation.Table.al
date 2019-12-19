@@ -1,54 +1,60 @@
 table 80001 "CommissionPlanCalculationTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Plan Calculation';
+    DataClassification = CustomerContent;
 
     fields
     {
         field(10; "Commission Plan Code"; Code[20])
         {
-            TableRelation = CommissionPlanTigCM;
+            Caption = 'Commission Plan Code';
+            DataClassification = CustomerContent;
+            TableRelation = CommissionPlanTigCM.Code;
         }
         field(20; "Tier Amount/Qty."; Decimal)
         {
+            Caption = 'Tier Amount/Quantity';
+            DataClassification = CustomerContent;
         }
         field(30; "Commission Rate"; Decimal)
         {
+            Caption = 'Commission Rate';
+            DataClassification = CustomerContent;
         }
         field(40; Retroactive; Boolean)
         {
+            Caption = 'Retroactive';
+            DataClassification = CustomerContent;
 
             trigger OnValidate();
             begin
                 if Retroactive then
-                    ERROR(FeatureNotEnabled);
+                    Error(FeatureNotEnabledErr);
             end;
         }
         field(100; "Introductory Rate"; Decimal)
         {
+            Caption = 'Introductory Rate';
+            DataClassification = CustomerContent;
         }
         field(110; "Intro Expires From First Sale"; DateFormula)
         {
+            Caption = 'Intro Expires From First Sale';
+            DataClassification = CustomerContent;
         }
     }
 
     keys
     {
-        key(Key1; "Commission Plan Code")
+        key(PK; "Commission Plan Code")
         {
+            Clustered = true;
         }
         key(Key2; "Tier Amount/Qty.")
         {
         }
     }
 
-    fieldgroups
-    {
-    }
-
     var
-        FeatureNotEnabled: Label 'Feature not enabled.';
+        FeatureNotEnabledErr: Label 'Feature not enabled.';
 }
-

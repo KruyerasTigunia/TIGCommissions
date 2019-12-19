@@ -1,24 +1,27 @@
 table 80003 "CommissionCustomerGroupTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Customer Group';
+    DataClassification = CustomerContent;
 
     fields
     {
         field(10; "Code"; Code[20])
         {
+            Caption = 'Code';
+            DataClassification = CustomerContent;
         }
         field(20; Description; Text[50])
         {
+            Caption = 'Description';
+            DataClassification = CustomerContent;
         }
     }
 
     keys
     {
-        key(Key1; "Code")
+        key(PK; "Code")
         {
+            Clustered = true;
         }
     }
 

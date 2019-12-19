@@ -1,30 +1,27 @@
 table 80009 "CommissionVendorGroupTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Vendor Group';
+    DataClassification = CustomerContent;
 
     fields
     {
         field(10; "Code"; Code[20])
         {
+            Caption = 'Code';
+            DataClassification = CustomerContent;
         }
         field(20; Description; Text[50])
         {
-            TableRelation = CommissionUnitGroupTigCM;
+            Caption = 'Description';
+            DataClassification = CustomerContent;
         }
     }
 
     keys
     {
-        key(Key1; "Code")
+        key(PK; "Code")
         {
+            Clustered = true;
         }
     }
-
-    fieldgroups
-    {
-    }
 }
-
