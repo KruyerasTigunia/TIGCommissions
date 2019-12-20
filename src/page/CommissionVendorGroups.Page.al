@@ -1,10 +1,9 @@
 page 80009 "CommissionVendorGroupsTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Vendor Groups';
     PageType = List;
+    ApplicationArea = All;
+    UsageCategory = Lists;
     SourceTable = CommissionVendorGroupTigCM;
 
     layout
@@ -15,16 +14,15 @@ page 80009 "CommissionVendorGroupsTigCM"
             {
                 field("Code"; Code)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Code';
                 }
                 field(Description; Description)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Description';
                 }
             }
         }
     }
-
-    actions
-    {
-    }
 }
-

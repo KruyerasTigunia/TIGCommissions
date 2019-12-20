@@ -1,16 +1,13 @@
 page 80023 "CommWizardStepsTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
-    Caption = 'Setup Steps';
+    Caption = 'Commission Wizard Steps';
+    PageType = ListPart;
+    UsageCategory = None;
+    SourceTable = CommWizardStepTigCM;
     DeleteAllowed = false;
     Editable = false;
     InsertAllowed = false;
-    PageType = ListPart;
     RefreshOnActivate = true;
-    SourceTable = CommWizardStepTigCM;
 
     layout
     {
@@ -20,32 +17,36 @@ page 80023 "CommWizardStepsTigCM"
             {
                 field(Line; "Entry No.")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Line';
                     Editable = false;
                 }
                 field("Action Msg."; "Action Msg.")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Action Msg.';
                     Caption = 'Setup Steps';
                     Editable = false;
                 }
                 field(Complete; Complete)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Complete';
                     Editable = false;
                 }
                 field(Help; Help)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Help';
                     Editable = false;
 
                     trigger OnAssistEdit();
                     begin
-                        MESSAGE('help');
+                        Message('help');
                     end;
                 }
             }
         }
-    }
-
-    actions
-    {
     }
 
     procedure GetEntryNo(): Integer;
@@ -53,4 +54,3 @@ page 80023 "CommWizardStepsTigCM"
         exit("Entry No.");
     end;
 }
-

@@ -1,14 +1,15 @@
 page 80008 "CommissionCustomersTigCM"
 {
-    // version TIGCOMM1.0
-
+    Caption = 'Commission Customers';
+    PageType = List;
+    ApplicationArea = All;
+    UsageCategory = Lists;
+    SourceTable = Customer;
     CardPageID = "Customer Card";
     DeleteAllowed = false;
     InsertAllowed = false;
     ModifyAllowed = false;
-    PageType = List;
     RefreshOnActivate = true;
-    SourceTable = Customer;
 
     layout
     {
@@ -19,29 +20,45 @@ page 80008 "CommissionCustomersTigCM"
                 Editable = false;
                 field("No."; "No.")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the No.';
                 }
                 field(Name; Name)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Name';
                 }
                 field("Search Name"; "Search Name")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Search Name';
                 }
                 field(Address; Address)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Address';
                 }
                 field(City; City)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the City';
                 }
                 field(County; County)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the County';
                 }
                 field("Post Code"; "Post Code")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Post Code';
                 }
             }
             part(Salespeople; CommCustSalespeopleTigCM)
             {
-                SubPageLink = "Customer No." = FIELD("No.");
+                //FIXME - change the type of the existing page or create a listpart
+                ApplicationArea = All;
+                SubPageLink = "Customer No." = field("No.");
                 UpdatePropagation = Both;
             }
         }
@@ -53,6 +70,10 @@ page 80008 "CommissionCustomersTigCM"
         {
             action("Edit Salespeople")
             {
+                ApplicationArea = All;
+                ToolTip = 'Opens the Salespeople page for editing';
+                Image = SalesPerson;
+                PromotedOnly = true;
                 Promoted = true;
                 PromotedCategory = Process;
                 PromotedIsBig = true;
@@ -62,11 +83,11 @@ page 80008 "CommissionCustomersTigCM"
                     CommCustSalesperson: Record "CommCustomerSalespersonTigCM";
                     CommCustSalespersons: Page CommCustSalespeopleTigCM;
                 begin
-                    CommCustSalesperson.RESET;
-                    CommCustSalesperson.SETRANGE("Customer No.", "No.");
+                    CommCustSalesperson.Reset();
+                    CommCustSalesperson.SetRange("Customer No.", "No.");
                     CLEAR(CommCustSalespersons);
-                    CommCustSalespersons.SETTABLEVIEW(CommCustSalesperson);
-                    CommCustSalespersons.RUNMODAL;
+                    CommCustSalespersons.SetTableView(CommCustSalesperson);
+                    CommCustSalespersons.RunModal();
                 end;
             }
         }

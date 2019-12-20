@@ -1,5 +1,6 @@
 codeunit 80003 "CreateCommEntriesFromHistTigCM"
 {
+    //TODO review this codeunit, mayb split up into method codeunits
     var
         CommSetup: Record CommissionSetupTigCM;
         RecogEntry: Record CommRecognitionEntryTigCM;

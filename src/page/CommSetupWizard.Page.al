@@ -1,10 +1,8 @@
 page 80022 "CommSetupWizardTigCM"
 {
-    // version TIGCOMM1.1
-
-    // TIGCOMM1.0 Commissions
-
     Caption = 'Commission Setup Wizard';
+    ApplicationArea = All;
+    UsageCategory = Administration;
     DeleteAllowed = false;
     InsertAllowed = false;
     SaveValues = true;
@@ -23,6 +21,9 @@ page 80022 "CommSetupWizardTigCM"
                 field(CommissionModel; CommissionModel)
                 {
                     Caption = 'Commission Model';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the CommissionModel';
+                    OptionCaption = 'Current salesperson rates,One rate for all,Varies per customer,Varies per customer group,Varies per item,Varies per item group,Varies per customer and item,Varies per customer and item group,Varies per customer group and item,Varies per customer group and item group';
 
                     trigger OnValidate();
                     begin
@@ -37,25 +38,36 @@ page 80022 "CommSetupWizardTigCM"
                 field(GlobalCommRate; GlobalCommRate)
                 {
                     Caption = 'Global Commission Rate';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the GlobalCommRate';
                     Editable = GlobalRateEditable;
                 }
                 field(DistributionMethod; DistributionMethod)
                 {
                     Caption = 'How are commissions paid';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the DistributionMethod';
+                    OptionCaption = 'Vendor,External Provider,Manual';
 
                     trigger OnValidate();
+                    var
+                        FeatureNotEnabledErr: Label 'Feature not enabled.';
                     begin
                         if DistributionMethod = DistributionMethod::"External Provider" then
-                            ERROR(Text008);
+                            Error(FeatureNotEnabledErr);
                     end;
                 }
                 field(CreatePayableVendors; CreatePayableVendors)
                 {
                     Caption = 'Create Payable Vendor per salesperson';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the CreatePayableVendors';
                 }
                 field(DistributionAccountNo; DistributionAccountNo)
                 {
                     Caption = 'Expense Account for vendor invoice lines';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the DistributionAccountNo';
                     LookupPageID = "G/L Account List";
                     TableRelation = "G/L Account"."No.";
                 }
@@ -66,14 +78,16 @@ page 80022 "CommSetupWizardTigCM"
                 field(PayManagers; PayManagers)
                 {
                     Caption = 'Pay Managers';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the PayManagers';
 
                     trigger OnValidate();
                     begin
-                        if PayManagers = PayManagers::Yes then
-                            MgrOptionsEditable := true
-                        else begin
-                            MgrSplitMgr := MgrSplitMgr::No;
-                            RepSplitMgr := RepSplitMgr::No;
+                        if PayManagers then begin
+                            MgrOptionsEditable := true;
+                        end else begin
+                            MgrSplitMgr := false;
+                            RepSplitMgr := false;
                             MgrOptionsEditable := false;
                         end;
                     end;
@@ -81,22 +95,28 @@ page 80022 "CommSetupWizardTigCM"
                 field(RepSplit; RepSplit)
                 {
                     Caption = 'Do salespeople split commissions with other salespeople';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the RepSplit';
                 }
                 field("<RepSplitMgr>"; RepSplitMgr)
                 {
                     Caption = 'Do salespeople split commissions with managers';
-                    Editable = MgrOptionsEditable;
+                    ApplicationArea = All;
                     ToolTip = 'If manager commissions are paid independently from salespeople, this should be NO';
+                    Editable = MgrOptionsEditable;
                 }
                 field(MgrSplitMgr; MgrSplitMgr)
                 {
                     Caption = 'Do managers split commissions with other managers';
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the MgrSplitMgr';
                     Editable = MgrOptionsEditable;
                 }
             }
             part(RecommendedActions; CommWizardStepsTigCM)
             {
                 Caption = 'Recommended Actions:';
+                ApplicationArea = All;
                 Visible = ActionsVisible;
             }
         }
@@ -108,35 +128,37 @@ page 80022 "CommSetupWizardTigCM"
         {
             action("Suggest Actions")
             {
+                Caption = 'Suggest Actions';
+                ApplicationArea = All;
+                ToolTip = 'Suggest Actions';
+                Image = Suggest;
                 Promoted = true;
                 PromotedCategory = Process;
                 PromotedIsBig = true;
+                PromotedOnly = true;
 
                 trigger OnAction();
                 begin
-                    SuggestActions;
+                    SuggestActions();
                 end;
             }
             action("Carry Out Action Step")
             {
+                Caption = 'Carry Out Action Step';
+                ApplicationArea = All;
+                ToolTip = 'Carry Out Action Step';
+                Image = CarryOutActionMessage;
                 Promoted = true;
                 PromotedCategory = Process;
                 PromotedIsBig = true;
 
                 trigger OnAction();
                 begin
-                    CarryoutAction;
+                    CarryoutAction();
                 end;
             }
         }
     }
-
-    trigger OnOpenPage();
-    begin
-        ActionsVisible := CommWizardStep.COUNT > 0;
-        GlobalRateEditable := CommissionModel = CommissionModel::"One rate for all";
-        MgrOptionsEditable := PayManagers = PayManagers::Yes;
-    end;
 
     var
         CommSetup: Record CommissionSetupTigCM;
@@ -147,51 +169,49 @@ page 80022 "CommSetupWizardTigCM"
         CommSetupPage: Page CommissionSetupTigCM;
         CommissionModel: Option "Current salesperson rates","One rate for all","Varies per customer","Varies per customer group","Varies per item","Varies per item group","Varies per customer and item","Varies per customer and item group","Varies per customer group and item","Varies per customer group and item group";
         DistributionMethod: Option Vendor,"External Provider",Manual;
-        CreatePayableVendors: Option Yes,No;
-        DistributionAccountNo: Code[20];
-        PayOnInvDiscounts: Option No,Yes;
+        UnitType: Option " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)",,All;
+        PayOnInvDiscounts: Boolean;
+        RepSplit: Boolean;
         [InDataSet]
-        GlobalRateEditable: Boolean;
-        GlobalCommRate: Decimal;
-        UseSalespersonRate: Option Yes,No;
-        RepSplit: Option No,Yes;
-        [InDataSet]
-        PayManagers: Option No,Yes;
+        PayManagers: Boolean;
+        MgrSplitMgr: Boolean;
+        RepSplitMgr: Boolean;
+        CreatePayableVendors: Boolean;
         [InDataSet]
         MgrOptionsEditable: Boolean;
-        MgrSplitMgr: Option No,Yes;
-        RepSplitMgr: Option No,Yes;
+        [InDataSet]
+        GlobalRateEditable: Boolean;
         [InDataSet]
         ActionsVisible: Boolean;
-        Text001: Label 'The Setup Wizard has already been run.';
-        RecogTriggerMethod: Option Booking,Shipment,Invoice,Payment;
-        PayableTriggerMethod: Option Booking,Shipment,Invoice,Payment;
+        DistributionAccountNo: Code[20];
         CommPlanCode: Code[20];
-        UnitType: Option " ","G/L Account",Item,Resource,"Fixed Asset","Charge (Item)",,All;
-        Text002: Label 'Action Complete.';
-        Text003: Label 'You must specify a Global Commission Rate.';
-        Text004: Label 'Commission Setup not complete.';
-        Text005: Label 'You must perform this step manually.\%1\Is this step completed?';
-        Text006: Label 'Please return to this step and confirm when completed.';
-        Text007: Label 'You must complete the prior step first.';
-        Text008: Label 'Feature not enabled.';
-        Text009: Label 'Setups Complete.';
+        GlobalCommRate: Decimal;
         CommPlanRate: Decimal;
-        Text010: Label 'You must specify an Expense Account for invoice lines.';
+        WizardAlreadyRunErr: Label 'The Setup Wizard has already been run.';
+
+    trigger OnOpenPage();
+    begin
+        ActionsVisible := CommWizardStep.Count() > 0;
+        GlobalRateEditable := CommissionModel = CommissionModel::"One rate for all";
+        MgrOptionsEditable := PayManagers;
+    end;
 
     local procedure SuggestActions();
+    var
+        MissingGlobalCommissionRateErr: Label 'You must specify a Global Commission Rate.';
+        MissingExpenseAcctErr: Label 'You must specify an Expense Account for invoice lines.';
     begin
-        if CommSetup.GET then
+        if CommSetup.Get() then
             if CommSetup."Wizard Run" then
-                ERROR(Text001);
+                Error(WizardAlreadyRunErr);
 
         if DistributionMethod = DistributionMethod::Vendor then
-            if CreatePayableVendors = CreatePayableVendors::Yes then
+            if CreatePayableVendors then
                 if DistributionAccountNo = '' then
-                    ERROR(Text010);
+                    Error(MissingExpenseAcctErr);
 
         ActionsVisible := true;
-        CommWizardMgt.DeleteSetupData;
+        CommWizardMgt.DeleteSetupData();
 
         //Common actions
         CommWizardMgt.InsertCommWizardStep('Create Commission Setup', 'COMMSETUP', false);
@@ -199,12 +219,12 @@ page 80022 "CommSetupWizardTigCM"
                       'their customers to that group. Based on existing assignment of reps to customers',
                       'COMMCUSTGROUP', false);
 
-        if PayManagers = PayManagers::Yes then
+        if PayManagers then
             CommWizardMgt.InsertCommWizardStep('Manually confirm all managers are setup as a Salesperson ' +
                           'before continuing', 'CONFIRM', false);
 
         if DistributionMethod = DistributionMethod::Vendor then
-            if CreatePayableVendors = CreatePayableVendors::Yes then
+            if CreatePayableVendors then
                 CommWizardMgt.InsertCommWizardStep('Create 1 payable vendor per salesperson', 'CREATEVENDOR', false);
 
         case CommissionModel of
@@ -218,8 +238,8 @@ page 80022 "CommSetupWizardTigCM"
             CommissionModel::"One rate for all":
                 begin
                     if GlobalCommRate = 0 then
-                        ERROR(Text003);
-                    CommWizardMgt.InsertCommWizardStep(STRSUBSTNO('Create 1 Commission Plan per salesperson using global ' +
+                        Error(MissingGlobalCommissionRateErr);
+                    CommWizardMgt.InsertCommWizardStep(StrSubstNo('Create 1 Commission Plan per salesperson using global ' +
                                   'rate of %1%.', GlobalCommRate), 'COMMPLANGLOBAL', false);
                 end;
             CommissionModel::"Varies per customer group":
@@ -268,21 +288,21 @@ page 80022 "CommSetupWizardTigCM"
                       'COMMCUSTSALESPERSON', false);
 
         //Inform user to mark manager plans
-        if PayManagers = PayManagers::Yes then
+        if PayManagers then
             CommWizardMgt.InsertCommWizardStep('Manually confirm all comm. plans for managers are marked as ' +
                           'manager level', 'CONFIRM', true);
 
         //Inform user has to manually create splits
-        if RepSplit = RepSplit::Yes then
+        if RepSplit then
             CommWizardMgt.InsertCommWizardStep('You must manually define salesperson split setups.', 'CONFIRM', true);
-        if MgrSplitMgr = MgrSplitMgr::Yes then
+        if MgrSplitMgr then
             CommWizardMgt.InsertCommWizardStep('You must manually define the manager split setups.', 'CONFIRM', true);
-        if RepSplitMgr = RepSplitMgr::Yes then
+        if RepSplitMgr then
             CommWizardMgt.InsertCommWizardStep('You must manually define salesperson/manager splits.', 'CONFIRM', true);
 
         //Inform user has to define the payable vendor for each comm plan payee
         if DistributionMethod = DistributionMethod::Vendor then
-            if CreatePayableVendors = CreatePayableVendors::No then begin
+            if not CreatePayableVendors then begin
                 CommWizardMgt.InsertCommWizardStep('You must manually assign a payable vendor to each ' +
                               'Comm. Plan Payee', 'CONFIRM', true);
                 CommWizardMgt.InsertCommWizardStep('You must manually assign an expense account to each ' +
@@ -291,36 +311,43 @@ page 80022 "CommSetupWizardTigCM"
     end;
 
     local procedure CarryoutAction();
+    var
+        ActionCompleteMsg: Label 'Action Complete.';
+        SetupNotCompleteErr: Label 'Commission Setup not complete.';
+        StepCompleteQst: Label 'You must perform this step manually.\%1\Is this step completed?';
+        ReturnToStepErr: Label 'Please return to this step and confirm when completed.';
+        PriorStepFirstErr: Label 'You must complete the prior step first.';
+        SetupCompleteMsg: Label 'Setup is Complete.';
     begin
-        if CommSetup.GET then
+        if CommSetup.Get() then
             if CommSetup."Wizard Run" then
-                ERROR(Text001);
+                Error(WizardAlreadyRunErr);
 
-        if not CommWizardStep.GET(CurrPage.RecommendedActions.PAGE.GetEntryNo) then
+        if not CommWizardStep.Get(CurrPage.RecommendedActions.Page.GetEntryNo()) then
             exit;
 
         if CommWizardStep."Entry No." > 1 then begin
-            CommWizardStep2.GET(CommWizardStep."Entry No." - 1);
+            CommWizardStep2.Get(CommWizardStep."Entry No." - 1);
             if not CommWizardStep2.Complete then
-                ERROR(Text007);
+                Error(PriorStepFirstErr);
         end;
 
         if not CommWizardStep.Complete then begin
             case CommWizardStep."Action Code" of
                 'COMMSETUP':
                     begin
-                        CommSetupPage.LOOKUPMODE(true);
-                        if not (CommSetupPage.RUNMODAL = ACTION::LookupOK) then
-                            ERROR(Text004);
+                        CommSetupPage.LookupMode(true);
+                        if not (CommSetupPage.RunModal() = Action::LookupOK) then
+                            Error(SetupNotCompleteErr);
                     end;
                 'CREATEVENDOR':
                     begin
-                        CommWizardMgt.CreatePayableVendors;
+                        CommWizardMgt.CreatePayableVendors();
                     end;
                 'COMMPLANREP', 'COMMPLANGLOBAL':
                     begin
-                        Salesperson.RESET;
-                        if Salesperson.FINDSET then begin
+                        Salesperson.Reset();
+                        if Salesperson.FindSet() then begin
                             repeat
                                 if CommWizardStep."Action Code" = 'COMMPLANGLOBAL' then
                                     CommPlanRate := GlobalCommRate
@@ -328,10 +355,10 @@ page 80022 "CommSetupWizardTigCM"
                                     CommPlanRate := Salesperson."Commission %";
 
                                 CommPlanCode := CommWizardMgt.CreateCommPlan(Salesperson.Code, UnitType::Item,
-                                                Salesperson.Name, PayOnInvDiscounts = PayOnInvDiscounts::Yes);
+                                                Salesperson.Name, PayOnInvDiscounts);
                                 CommWizardMgt.CreateCommPlanCalcLine(CommPlanCode, CommPlanRate);
                                 CommWizardMgt.CreateCommPlanPayee(CommPlanCode, Salesperson.Code, DistributionMethod, DistributionAccountNo);
-                            until Salesperson.NEXT = 0;
+                            until Salesperson.Next() = 0;
                         end;
                     end;
                 'COMMCUSTGROUP':
@@ -340,29 +367,28 @@ page 80022 "CommSetupWizardTigCM"
                     end;
                 'COMMCUSTSALESPERSON':
                     begin
-                        CommWizardMgt.CreateCommCustSalesperson;
+                        CommWizardMgt.CreateCommCustSalesperson();
                     end;
                 'CONFIRM':
                     begin
-                        if not CONFIRM(Text005, false, CommWizardStep."Action Msg.") then
-                            ERROR(Text006);
+                        if not Confirm(StepCompleteQst, false, CommWizardStep."Action Msg.") then
+                            Error(ReturnToStepErr);
                     end;
             end;
 
             CommWizardStep.Complete := true;
-            CommWizardStep.MODIFY;
-            MESSAGE(Text002);
+            CommWizardStep.Modify();
+            Message(ActionCompleteMsg);
 
             //Mark setup as complete
-            CommWizardStep2.FINDLAST;
+            CommWizardStep2.FindLast();
             if CommWizardStep2."Entry No." = CommWizardStep."Entry No." then begin
-                CommSetup.GET;
-                CommSetup.VALIDATE("Wizard Run", true);
-                CommSetup.MODIFY(true);
-                MESSAGE(Text009);
-                CommWizardMgt.DeleteCommWizardSteps;
+                CommSetup.Get();
+                CommSetup.Validate("Wizard Run", true);
+                CommSetup.Modify(true);
+                Message(SetupCompleteMsg);
+                CommWizardMgt.DeleteCommWizardSteps();
             end;
         end;
     end;
 }
-

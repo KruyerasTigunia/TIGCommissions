@@ -1,9 +1,5 @@
 page 80004 "CommissionCustomerGroupsTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
     PageType = List;
     PromotedActionCategories = 'Manage,Functions,Update,Post,Print,Related Information,f';
     SourceTable = CommissionCustomerGroupTigCM;
@@ -16,9 +12,13 @@ page 80004 "CommissionCustomerGroupsTigCM"
             {
                 field("Code"; Code)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Code';
                 }
                 field(Description; Description)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Description';
                 }
             }
         }
@@ -30,12 +30,11 @@ page 80004 "CommissionCustomerGroupsTigCM"
         {
             action(Members)
             {
-                //The property 'PromotedIsBig' can only be set if the property 'Promoted' is set to 'true'
-                //PromotedIsBig = true;
+                ApplicationArea = All;
+                ToolTip = 'Opens the Commission Customer Group Members page';
                 RunObject = Page CommissionCustGrpMembersTigCM;
-                RunPageLink = "Group Code" = FIELD(Code);
+                RunPageLink = "Group Code" = field(Code);
             }
         }
     }
 }
-

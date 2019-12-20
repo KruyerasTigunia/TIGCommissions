@@ -1,11 +1,9 @@
-page 80020 "CommSalespeopleCustomersTigCM"
+page 80020 "CommCustomerSalespeopleTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
-    Caption = 'Customers';
+    Caption = 'Commission Customer Salespeople';
     PageType = ListPart;
+    ApplicationArea = All;
+    UsageCategory = Lists;
     SourceTable = "CommCustomerSalespersonTigCM";
 
     layout
@@ -16,23 +14,20 @@ page 80020 "CommSalespeopleCustomersTigCM"
             {
                 field("Customer No."; "Customer No.")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Customer No.';
                 }
                 field("Customer Name"; "Customer Name")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Customer Name';
                 }
                 field("Split Pct."; "Split Pct.")
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Split Pct.';
                 }
             }
         }
     }
-
-    actions
-    {
-    }
-
-    var
-        Text001: TextConst ENU = 'Split Pct. distribution must = 100 or 0.';
-        SplitPctTotal: Decimal;
 }
-

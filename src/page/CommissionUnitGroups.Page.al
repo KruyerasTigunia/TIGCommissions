@@ -1,10 +1,9 @@
 page 80006 "CommissionUnitGroupsTigCM"
 {
-    // version TIGCOMM1.0
-
-    // TIGCOMM1.0 Commissions
-
+    Caption = 'Commission Unit Groups';
     PageType = List;
+    ApplicationArea = All;
+    UsageCategory = Lists;
     PromotedActionCategories = 'Manage,Functions,Update,Post,Print,Related Information,f';
     SourceTable = CommissionUnitGroupTigCM;
 
@@ -16,9 +15,13 @@ page 80006 "CommissionUnitGroupsTigCM"
             {
                 field("Code"; Code)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Code';
                 }
                 field(Description; Description)
                 {
+                    ApplicationArea = All;
+                    Tooltip = 'Specifies the Description';
                 }
             }
         }
@@ -30,12 +33,15 @@ page 80006 "CommissionUnitGroupsTigCM"
         {
             action(Members)
             {
-                //The property 'PromotedIsBig' can only be set if the property 'Promoted' is set to 'true'
-                //PromotedIsBig = true;
+                ApplicationArea = All;
+                ToolTip = 'Opens the Members page';
+                Image = ContactPerson;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedOnly = true;
                 RunObject = Page CommissionUnitGrpMembersTigCM;
-                RunPageLink = "Group Code" = FIELD(Code);
+                RunPageLink = "Group Code" = field(Code);
             }
         }
     }
 }
-
