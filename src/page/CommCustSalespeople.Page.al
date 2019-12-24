@@ -34,6 +34,7 @@ page 80018 "CommCustSalespeopleTigCM"
 
     trigger OnClosePage();
     begin
+        //FIXME - not sure why this happens in this event. Should really be table related instead (OnModify?)
         SynchCustomer();
     end;
 }

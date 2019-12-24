@@ -1,6 +1,7 @@
 report 80001 "CommissionWkshttoExcelTigCM"
 {
     //FIXME - find alternative for current excel buffer functionality
+    //        for now maybe just disable it altogether?
     Caption = 'Commission Worksheet to Excel';
     ApplicationArea = All;
     UsageCategory = Tasks;

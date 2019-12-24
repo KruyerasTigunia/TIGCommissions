@@ -57,6 +57,8 @@ table 80005 "CommCustomerSalespersonTigCM"
         Customer: Record Customer;
         CustSalesperson: Record "CommCustomerSalespersonTigCM";
     begin
+        //FIXME - not sure why this happens only if there is one related customer
+        //        figure out the requirement
         //Keep customer record in synch, but only if no split commissions for this customer
         if Customer.Get("Customer No.") then begin
             CustSalesperson.SetRange("Customer No.", "Customer No.");

@@ -1,6 +1,9 @@
 page 80004 "CommissionCustomerGroupsTigCM"
 {
+    Caption = 'Commission Customer Groups';
     PageType = List;
+    ApplicationArea = All;
+    UsageCategory = Lists;
     PromotedActionCategories = 'Manage,Functions,Update,Post,Print,Related Information,f';
     SourceTable = CommissionCustomerGroupTigCM;
 
@@ -23,7 +26,6 @@ page 80004 "CommissionCustomerGroupsTigCM"
             }
         }
     }
-
     actions
     {
         area(navigation)
@@ -32,6 +34,7 @@ page 80004 "CommissionCustomerGroupsTigCM"
             {
                 ApplicationArea = All;
                 ToolTip = 'Opens the Commission Customer Group Members page';
+                Image = CustomerList;
                 RunObject = Page CommissionCustGrpMembersTigCM;
                 RunPageLink = "Group Code" = field(Code);
             }

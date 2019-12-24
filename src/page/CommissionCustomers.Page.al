@@ -1,5 +1,8 @@
 page 80008 "CommissionCustomersTigCM"
 {
+    //FIXME - wrong design
+    //TODO - create a new listpart to show on the CommCustSalespeopleTigCM page
+    //TODO - Change this to a page extension, and put the action on the regular Customer List
     Caption = 'Commission Customers';
     PageType = List;
     ApplicationArea = All;
@@ -56,7 +59,6 @@ page 80008 "CommissionCustomersTigCM"
             }
             part(Salespeople; CommCustSalespeopleTigCM)
             {
-                //FIXME - change the type of the existing page or create a listpart
                 ApplicationArea = All;
                 SubPageLink = "Customer No." = field("No.");
                 UpdatePropagation = Both;
