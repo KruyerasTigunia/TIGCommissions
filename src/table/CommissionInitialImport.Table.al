@@ -1,4 +1,4 @@
-table 50045 "CommissionInitialImportTigCM"
+table 80006 "CommissionInitialImportTigCM"
 {
     Caption = 'Commission Initial Import';
     DataClassification = CustomerContent;

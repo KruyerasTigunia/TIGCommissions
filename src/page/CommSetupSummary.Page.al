@@ -1,4 +1,4 @@
-page 50089 "CommSetupSummaryTigCM"
+page 80024 "CommSetupSummaryTigCM"
 {
     Caption = 'Commission Setup Summary';
     PageType = List;

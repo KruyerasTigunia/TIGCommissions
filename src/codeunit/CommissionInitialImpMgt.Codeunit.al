@@ -1,4 +1,4 @@
-codeunit 50007 "CommissionInitialImpMgtTigCM"
+codeunit 80004 "CommissionInitialImpMgtTigCM"
 {
     var
         CommSetup: Record CommissionSetupTigCM;

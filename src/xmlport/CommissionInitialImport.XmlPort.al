@@ -1,4 +1,4 @@
-xmlport 50070 "CommissionInitialImportTigCM"
+xmlport 80000 "CommissionInitialImportTigCM"
 {
     FieldDelimiter = '<None>';
     FieldSeparator = '<TAB>';

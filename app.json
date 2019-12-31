@@ -28,8 +28,8 @@
   "platform": "15.0.0.0",
   "idRanges": [
     {
-      "from": 50000,
-      "to": 99999
+      "from": 80000,
+      "to": 80099
     }
   ],
   "contextSensitiveHelpUrl": "https://www.tigunia.com/Contact/",
