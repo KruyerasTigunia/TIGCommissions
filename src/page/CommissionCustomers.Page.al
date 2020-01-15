@@ -57,7 +57,7 @@ page 80008 "CommissionCustomersTigCM"
                     Tooltip = 'Specifies the Post Code';
                 }
             }
-            part(Salespeople; CommCustSalespeopleTigCM)
+            part(Salespeople; CommCustSalespeoplePartTigCM)
             {
                 ApplicationArea = All;
                 SubPageLink = "Customer No." = field("No.");
