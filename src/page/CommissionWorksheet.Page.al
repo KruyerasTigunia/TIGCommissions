@@ -15,7 +15,7 @@ page 80014 "CommissionWorksheetTigCM"
         {
             group(Options)
             {
-                field(BatchName; BatchName)
+                field(BatchNameLbl; BatchName)
                 {
                     Caption = 'Batch Name';
                     ApplicationArea = All;

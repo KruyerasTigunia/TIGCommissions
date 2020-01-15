@@ -15,7 +15,7 @@ page 80015 "CommissionPaymentJournalTigCM"
     {
         area(content)
         {
-            field(CurrentJnlBatchName; CurrentJnlBatchName)
+            field(CurrentJnlBatchNameLbl; CurrentJnlBatchName)
             {
                 Caption = 'Current Journal Batch Name';
                 ApplicationArea = All;
@@ -566,7 +566,7 @@ page 80015 "CommissionPaymentJournalTigCM"
                 {
                     group(Control82)
                     {
-                        field(OverdueWarningText; OverdueWarningText)
+                        field(OverdueWarningTextLbl; OverdueWarningText)
                         {
                             Caption = 'Overdue Warning Text';
                             ApplicationArea = All;
@@ -581,7 +581,7 @@ page 80015 "CommissionPaymentJournalTigCM"
                     group("Account Name")
                     {
                         Caption = 'Account Name';
-                        field(AccName; AccName)
+                        field(AccNameLbl; AccName)
                         {
                             Caption = 'Account Name';
                             ApplicationArea = All;
@@ -593,7 +593,7 @@ page 80015 "CommissionPaymentJournalTigCM"
                     group("Bal. Account Name")
                     {
                         Caption = 'Bal. Account Name';
-                        field(BalAccName; BalAccName)
+                        field(BalAccNameLbl; BalAccName)
                         {
                             Caption = 'Bal. Account Name';
                             ApplicationArea = All;
@@ -601,10 +601,10 @@ page 80015 "CommissionPaymentJournalTigCM"
                             Editable = false;
                         }
                     }
-                    group(Balance)
+                    group(BalanceGroup)
                     {
                         Caption = 'Balance';
-                        field(Balance2; Balance + "Balance (LCY)" - xRec."Balance (LCY)")
+                        field(BalanceLbl; Balance + "Balance (LCY)" - xRec."Balance (LCY)")
                         {
                             Caption = 'Balance';
                             ApplicationArea = All;
@@ -617,7 +617,7 @@ page 80015 "CommissionPaymentJournalTigCM"
                     group("Total Balance")
                     {
                         Caption = 'Total Balance';
-                        field(TotalBalance; TotalBalance + "Balance (LCY)" - xRec."Balance (LCY)")
+                        field(TotalBalanceLbl; TotalBalance + "Balance (LCY)" - xRec."Balance (LCY)")
                         {
                             Caption = 'Total Balance';
                             ApplicationArea = All;

@@ -28,7 +28,7 @@ page 80007 "CommissionUnitGrpMembersTigCM"
 
                     trigger OnValidate();
                     begin
-                        Desc := GetDescription();
+                        MyDescription := GetDescription();
                     end;
                 }
                 field("No."; "No.")
@@ -42,7 +42,7 @@ page 80007 "CommissionUnitGrpMembersTigCM"
                         CurrPage.Update();
                     end;
                 }
-                field(Desc; Desc)
+                field(MyDescriptionLbl; MyDescription)
                 {
                     Caption = 'Description';
                     ApplicationArea = All;
@@ -55,11 +55,11 @@ page 80007 "CommissionUnitGrpMembersTigCM"
 
     trigger OnAfterGetRecord();
     begin
-        Desc := GetDescription();
+        MyDescription := GetDescription();
     end;
 
     var
-        Desc: Text[50];
+        MyDescription: Text[50];
 
     local procedure GetDescription(): Text[50];
     var
@@ -73,13 +73,13 @@ page 80007 "CommissionUnitGrpMembersTigCM"
                 begin
                     if not Item.GET("No.") then
                         CLEAR(Item);
-                    exit(CopyStr(Item.Description, 1, MaxStrLen(Desc)));
+                    exit(CopyStr(Item.Description, 1, MaxStrLen(MyDescription)));
                 end;
             Type::Resource:
                 begin
                     if not Resource.GET("No.") then
                         CLEAR(Resource);
-                    exit(CopyStr(Resource.Name, 1, MaxStrLen(Desc)));
+                    exit(CopyStr(Resource.Name, 1, MaxStrLen(MyDescription)));
                 end;
             else begin
                     exit('');

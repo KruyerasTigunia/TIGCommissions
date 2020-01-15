@@ -18,7 +18,7 @@ page 80022 "CommSetupWizardTigCM"
             group(GlobalSettings)
             {
                 Caption = 'Global Settings';
-                field(CommissionModel; CommissionModel)
+                field(CommissionModelLbl; CommissionModel)
                 {
                     Caption = 'Commission Model';
                     ApplicationArea = All;
@@ -35,14 +35,14 @@ page 80022 "CommSetupWizardTigCM"
                         end;
                     end;
                 }
-                field(GlobalCommRate; GlobalCommRate)
+                field(GlobalCommRateLbl; GlobalCommRate)
                 {
                     Caption = 'Global Commission Rate';
                     ApplicationArea = All;
                     Tooltip = 'Specifies the GlobalCommRate';
                     Editable = GlobalRateEditable;
                 }
-                field(DistributionMethod; DistributionMethod)
+                field(DistributionMethodLbl; DistributionMethod)
                 {
                     Caption = 'How are commissions paid';
                     ApplicationArea = All;
@@ -57,13 +57,13 @@ page 80022 "CommSetupWizardTigCM"
                             Error(FeatureNotEnabledErr);
                     end;
                 }
-                field(CreatePayableVendors; CreatePayableVendors)
+                field(CreatePayableVendorsLbl; CreatePayableVendors)
                 {
                     Caption = 'Create Payable Vendor per salesperson';
                     ApplicationArea = All;
                     Tooltip = 'Specifies the CreatePayableVendors';
                 }
-                field(DistributionAccountNo; DistributionAccountNo)
+                field(DistributionAccountNoLbl; DistributionAccountNo)
                 {
                     Caption = 'Expense Account for vendor invoice lines';
                     ApplicationArea = All;
@@ -75,7 +75,7 @@ page 80022 "CommSetupWizardTigCM"
             group(Salespeople)
             {
                 Caption = 'Managers and Commission Splits';
-                field(PayManagers; PayManagers)
+                field(PayManagersLbl; PayManagers)
                 {
                     Caption = 'Pay Managers';
                     ApplicationArea = All;
@@ -92,7 +92,7 @@ page 80022 "CommSetupWizardTigCM"
                         end;
                     end;
                 }
-                field(RepSplit; RepSplit)
+                field(RepSplitLbl; RepSplit)
                 {
                     Caption = 'Do salespeople split commissions with other salespeople';
                     ApplicationArea = All;
@@ -105,7 +105,7 @@ page 80022 "CommSetupWizardTigCM"
                     ToolTip = 'If manager commissions are paid independently from salespeople, this should be NO';
                     Editable = MgrOptionsEditable;
                 }
-                field(MgrSplitMgr; MgrSplitMgr)
+                field(MgrSplitMgrLbl; MgrSplitMgr)
                 {
                     Caption = 'Do managers split commissions with other managers';
                     ApplicationArea = All;
