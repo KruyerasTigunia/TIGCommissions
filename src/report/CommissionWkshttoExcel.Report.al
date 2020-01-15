@@ -1,7 +1,5 @@
 report 80001 "CommissionWkshttoExcelTigCM"
 {
-    //FIXME - find alternative for current excel buffer functionality
-    //        for now maybe just disable it altogether?
     Caption = 'Commission Worksheet to Excel';
     ApplicationArea = All;
     UsageCategory = Tasks;
@@ -9,129 +7,104 @@ report 80001 "CommissionWkshttoExcelTigCM"
 
     dataset
     {
-        dataitem(CommissionPmtEntry; "Integer")
+        dataitem(SalesRep; "Integer")
         {
             DataItemTableView = sorting(Number);
-            dataitem(SalesRep; "Integer")
-            {
-                DataItemTableView = sorting(Number);
-
-                trigger OnAfterGetRecord();
-                begin
-                    if Number = 1 then
-                        SalespersonTemp.FindSet()
-                    else
-                        SalespersonTemp.Next();
-                    SalespersonTemp."Commission %" := 0;
-
-                    if SalespersonTemp.Code <> LastSalespersonCode then
-                        WriteExcelWkshtHeader(true, SalespersonTemp.Name);
-
-                    with CommPmtEntryTemp do begin
-                        SetRange("Salesperson Code", SalespersonTemp.Code);
-                        if FindSet() then begin
-                            repeat
-                                Customer.Get("Customer No.");
-                                EnterCell(RowNo, 1, Format("Batch Name"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 2, Format("Salesperson Code"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 3, Format("Entry Type"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 4, Format("Posting Date"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 5, Format("Payout Date"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 6, Format(Customer.Name), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 7, Format("Document No."), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 8, Description, false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 9, Format("Commission Plan Code"), false, false, '', ExcelBuf."Cell Type"::Text);
-                                EnterCell(RowNo, 10, Format(Amount, 0, '<Sign><Integer><Decimal,3>'), false, false, '', ExcelBuf."Cell Type"::Number);
-                                RowNo += 1;
-
-                                SalespersonTemp."Commission %" += Amount;
-                                LastSalespersonCode := "Salesperson Code";
-                            until Next() = 0;
-                            //Sum totals
-                            EnterFormula(RowNo, 10, '=SUM(J6:J' + Format(RowNo - 1) + ')', true, false, '');
-                        end;
-                    end;
-                    SalespersonTemp.Modify();
-
-                    ExcelBuf.WriteSheet(
-                      SalespersonTemp.Name,
-                      CompanyName(),
-                      UserId());
-                end;
-
-                trigger OnPreDataItem();
-                begin
-                    SetRange(Number, 1, SalespersonTemp.Count());
-                    if SalespersonTemp.FindFirst() then begin
-                        WriteExcelWkshtHeader(false, SalespersonTemp.Name);
-                        LastSalespersonCode := SalespersonTemp.Code;
-                    end;
-                end;
-            }
-
-            trigger OnPostDataItem();
-            begin
-                //Write summary sheet if more than 1 salesperson
-                if SalespersonTemp.Count() > 1 then begin
-                    if SalespersonTemp.FindSet() then begin
-                        ExcelBuf.DeleteAll();
-                        ExcelBuf.CreateNewSheet(SummaryLbl);
-
-                        EnterCell(1, 1, CopyStr(CompanyName(), 1, 250), true, false, '', ExcelBuf."Cell Type"::Text);
-                        EnterCell(2, 1, ReportTitle, true, false, '', ExcelBuf."Cell Type"::Text);
-                        EnterCell(3, 1, Format(ReportRunTime) + ': ' + UserId(), true, false, '', ExcelBuf."Cell Type"::Text);
-                        RowNo := 5;
-
-                        EnterCell(RowNo, 1, SalespersonCodeLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-                        EnterCell(RowNo, 2, AmountLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-                        RowNo := 6;
-
-                        repeat
-                            EnterCell(RowNo, 1, SalespersonTemp.Name, false, false, '', ExcelBuf."Cell Type"::Text);
-                            EnterCell(RowNo, 2, Format(ROUND(SalespersonTemp."Commission %", 0.01), 0, '<Sign><Integer><Decimal,3>'), false, false, '', ExcelBuf."Cell Type"::Number);
-                            RowNo += 1;
-                        until SalespersonTemp.Next() = 0;
-
-                        //Sum totals
-                        EnterFormula(RowNo, 2, '=SUM(B6:B' + Format(RowNo - 1) + ')', true, false, '');
-
-                        ExcelBuf.WriteSheet(
-                          SummaryLbl,
-                          CompanyName(),
-                          UserId());
-                    end;
-                end;
-            end;
 
             trigger OnPreDataItem();
             begin
-                case Source of
-                    Source::Worksheet:
-                        begin
-                            CopyWkshtToLedger(CommWkshtLine, CommPmtEntryTemp, SalespersonFilter);
-                            ReportTitle := ReportTitleWkshtLbl;
-                        end;
-                    Source::Posted:
-                        begin
-                            CopyLedgerToLedger(CommPmtEntry, CommPmtEntryTemp, SalespersonFilter);
-                            ReportTitle := ReporTitlePostedLbl;
-                        end;
-                    Source::" ":
-                        ERROR(NothingToPrintErr);
-                end;
+                SetRange(Number, 1, TempSalesperson.Count());
+            end;
 
-                SetRange(Number, 1, CommPmtEntryTemp.Count());
-                CommPmtEntryTemp.SetCurrentKey("Salesperson Code", "Customer No.");
-                if CommPmtEntryTemp.FindSet() then begin
-                    repeat
-                        if not SalespersonTemp.Get(CommPmtEntryTemp."Salesperson Code") then begin
-                            Salesperson.Get(CommPmtEntryTemp."Salesperson Code");
-                            SalespersonTemp := Salesperson;
-                            SalespersonTemp.Insert();
-                        end;
-                    until CommPmtEntryTemp.Next() = 0;
+            trigger OnAfterGetRecord();
+            var
+                Customer: Record Customer;
+                MyCurrentRow: Integer;
+            begin
+                TempExcelBuffer.DeleteAll();
+                if Number = 1 then begin
+                    TempSalesperson.FindSet();
+                    WriteExcelWkshtHeader(true, TempSalesperson.Name);
+                end else begin
+                    TempSalesperson.Next();
+                    WriteExcelWkshtHeader(false, TempSalesperson.Name);
                 end;
-                SetRange(Number, 1);
+                TempSalesperson."Commission %" := 0;
+
+                with TempCommPmtEntry do begin
+                    SetCurrentKey("Salesperson Code", "Customer No.");
+                    SetRange("Salesperson Code", TempSalesperson.Code);
+                    if FindSet() then begin
+                        repeat
+                            if not (Customer."No." = "Customer No.") then
+                                Customer.Get("Customer No.");
+
+                            TempExcelBuffer.NewRow();
+                            GetCurrentRow(MyCurrentRow);
+
+                            TempExcelBuffer.AddColumn("Batch Name", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn("Salesperson Code", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn("Entry Type", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn("Posting Date", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn("Payout Date", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn(Customer.Name, false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn("Document No.", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn(Description, false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn("Commission Plan Code", false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn(Amount, false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Number);
+
+                            TempSalesperson."Commission %" += Amount;
+                        until Next() = 0;
+
+                        //Sum totals
+                        TempExcelBuffer.NewRow();
+                        GetCurrentRow(MyCurrentRow);
+                        TempExcelBuffer.SetCurrent(MyCurrentRow, 9);
+                        TempExcelBuffer.AddColumn('=SUM(J6:J' + Format(MyCurrentRow - 1) + ')', true, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                    end;
+                end;
+                TempSalesperson.Modify();
+
+                TempExcelBuffer.WriteSheet(TempSalesperson.Name, CompanyName(), UserId());
+            end;
+
+            trigger OnPostDataItem();
+            var
+                MyCurrentRow: Integer;
+            begin
+                //Write summary sheet if more than 1 salesperson
+                if TempSalesperson.Count() > 1 then begin
+                    if TempSalesperson.FindSet() then begin
+                        TempExcelBuffer.DeleteAll();
+                        TempExcelBuffer.SelectOrAddSheet(SummarySheetLbl);
+
+                        TempExcelBuffer.ClearNewRow();
+                        TempExcelBuffer.NewRow();
+                        TempExcelBuffer.AddColumn(CopyStr(CompanyName(), 1, 250), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                        TempExcelBuffer.NewRow();
+                        TempExcelBuffer.AddColumn(ReportTitle, false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                        TempExcelBuffer.NewRow();
+                        TempExcelBuffer.AddColumn(Format(ReportRunTime) + ': ' + UserId(), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                        TempExcelBuffer.NewRow();
+                        TempExcelBuffer.NewRow();
+                        TempExcelBuffer.AddColumn(TempCommPmtEntry.FieldCaption("Salesperson Code"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                        TempExcelBuffer.AddColumn(TempCommPmtEntry.FieldCaption(Amount), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+
+                        repeat
+                            TempExcelBuffer.NewRow();
+                            TempExcelBuffer.AddColumn(TempSalesperson.Name, false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Text);
+                            TempExcelBuffer.AddColumn(ROUND(TempSalesperson."Commission %", 0.01), false, '', false, false, false, '', TempExcelBuffer."Cell Type"::Number);
+                        until TempSalesperson.Next() = 0;
+
+                        //Sum totals
+                        TempExcelBuffer.NewRow();
+                        GetCurrentRow(MyCurrentRow);
+                        TempExcelBuffer.SetCurrent(MyCurrentRow, 1);
+                        TempExcelBuffer.AddColumn('=SUM(B6:B' + Format(MyCurrentRow - 1) + ')', true, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+
+                        TempExcelBuffer.WriteSheet(SummarySheetLbl, CompanyName(), UserId());
+                    end;
+                end;
             end;
         }
     }
@@ -156,31 +129,27 @@ report 80001 "CommissionWkshttoExcelTigCM"
 
     }
 
-    trigger OnPostReport();
-    begin
-        if BookOpen then begin
-            ExcelBuf.CloseBook();
-            ExcelBuf.OpenExcel();
-            ExcelBuf.GiveUserControl;
-        end;
-    end;
-
     trigger OnPreReport();
     begin
+        InitTempRecords();
         ReportRunTime := CurrentDateTime();
+    end;
+
+    trigger OnPostReport();
+    begin
+        TempExcelBuffer.CloseBook();
+        TempExcelBuffer.SetFriendlyFilename('CommissionWorksheet');
+        TempExcelBuffer.OpenExcel();
     end;
 
     var
         CommWkshtLine: Record CommissionWksheetLineTigCM;
         CommPmtEntry: Record CommissionPaymentEntryTigCM;
-        CommPmtEntryTemp: Record CommissionPaymentEntryTigCM temporary;
         Salesperson: Record "Salesperson/Purchaser";
-        SalespersonTemp: Record "Salesperson/Purchaser" temporary;
-        Customer: Record Customer;
-        ExcelBuf: Record "Excel Buffer";
+        TempCommPmtEntry: Record CommissionPaymentEntryTigCM temporary;
+        TempExcelBuffer: Record "Excel Buffer" temporary;
+        TempSalesperson: Record "Salesperson/Purchaser" temporary;
         EntryNo: Integer;
-        RowNo: Integer;
-        BookOpen: Boolean;
         LastSalespersonCode: Code[20];
         SalespersonFilter: Code[20];
         ReportRunTime: DateTime;
@@ -188,140 +157,157 @@ report 80001 "CommissionWkshttoExcelTigCM"
         Source: Option " ",Worksheet,Posted;
         ReportTitleWkshtLbl: Label 'Suggested Commissions to Pay';
         ReporTitlePostedLbl: Label 'Posted Commission Payments';
-        BatchNameLbl: Label 'Batch Name';
-        EntryTypeLbl: Label 'Entry Type';
-        PostingDateLbl: Label 'Posting Date';
-        PayoutDateLbl: Label 'Payout Date';
-        SalespersonCodeLbl: Label 'Salesperson';
-        CustomerNoLbl: Label 'Customer';
-        DocumentNoLbl: Label 'Document No.';
-        DescriptionLbl: Label 'Description';
-        AmountLbl: Label 'Amount';
-        CommissionPlanLbl: Label 'Comm. Plan';
-        SummaryLbl: Label 'Summary';
-        NothingToPrintErr: Label 'Nothing to print.';
+        SummarySheetLbl: Label 'Summary';
+        CustomerNameLbl: Label 'Customer Name';
+        NothingToExportErr: Label 'Nothing to export';
 
-    local procedure EnterCell(RowNo: Integer; ColumnNo: Integer; CellValue: Text[250]; Bold: Boolean; UnderLine: Boolean; NumberFormat: Text[30]; CellType: Option);
+    procedure SetSourceWorksheet(var NewCommWkshtLine: Record CommissionWksheetLineTigCM);
     begin
-        ExcelBuf.Init();
-        ExcelBuf.Validate("Row No.", RowNo);
-        ExcelBuf.Validate("Column No.", ColumnNo);
-        ExcelBuf."Cell Value as Text" := CellValue;
-        ExcelBuf.Formula := '';
-        ExcelBuf.Bold := Bold;
-        ExcelBuf.Underline := UnderLine;
-        ExcelBuf.NumberFormat := NumberFormat;
-        ExcelBuf."Cell Type" := CellType;
-        ExcelBuf.Insert();
+        if NewCommWkshtLine.IsEmpty() then
+            Error(NothingToExportErr);
+        CommWkshtLine.Copy(NewCommWkshtLine);
+        Clear(CommPmtEntry);
+        Source := Source::Worksheet;
+        ReportTitle := ReportTitleWkshtLbl;
     end;
 
-    local procedure EnterFilterInCell("Filter": Text[250]; FieldName: Text[100]);
+    procedure SetSourcePosted(var NewCommPmtEntry: Record CommissionPaymentEntryTigCM);
     begin
-        if Filter <> '' then begin
-            RowNo := RowNo + 1;
-            EnterCell(RowNo, 1, FieldName, false, false, '', ExcelBuf."Cell Type"::Text);
-            EnterCell(RowNo, 2, Filter, false, false, '', ExcelBuf."Cell Type"::Text);
+        if NewCommPmtEntry.IsEmpty() then
+            Error(NothingToExportErr);
+        CommPmtEntry.Copy(NewCommPmtEntry);
+        Clear(CommWkshtLine);
+        Source := Source::Posted;
+        ReportTitle := ReporTitlePostedLbl;
+    end;
+
+    local procedure InitTempRecords()
+    begin
+        TempExcelBuffer.Reset();
+        TempExcelBuffer.DeleteAll();
+        TempCommPmtEntry.Reset();
+        TempCommPmtEntry.DeleteAll();
+        case Source of
+            Source::Worksheet:
+                begin
+                    CopyWkshtToTempPmtEntry();
+                    ReportTitle := ReportTitleWkshtLbl;
+                end;
+            Source::Posted:
+                begin
+                    CopyPmtEntryToTempPmtEntry();
+                    ReportTitle := ReporTitlePostedLbl;
+                end;
+            else
+                Error(NothingToExportErr);
         end;
     end;
 
-    local procedure EnterFormula(RowNo: Integer; ColumnNo: Integer; CellValue: Text[250]; Bold: Boolean; UnderLine: Boolean; NumberFormat: Text[30]);
+    local procedure CopyWkshtToTempPmtEntry();
     begin
-        ExcelBuf.Init();
-        ExcelBuf.Validate("Row No.", RowNo);
-        ExcelBuf.Validate("Column No.", ColumnNo);
-        ExcelBuf."Cell Value as Text" := '';
-        ExcelBuf.Formula := CellValue; // is converted to formula later.
-        ExcelBuf.Bold := Bold;
-        ExcelBuf.Underline := UnderLine;
-        ExcelBuf.NumberFormat := NumberFormat;
-        ExcelBuf.Insert();
-    end;
-
-    local procedure CopyWkshtToLedger(var CommWkshtLine2: Record CommissionWksheetLineTigCM; var CommPmtEntry2: Record CommissionPaymentEntryTigCM; SalespersonFilter: Text[100]);
-    begin
-        CommWkshtLine2.SetCurrentKey("Salesperson Code", "Customer No.");
-        if SalespersonFilter <> '' then
-            CommWkshtLine2.SetRange("Salesperson Code", SalespersonFilter);
-        if CommWkshtLine2.FindSet() then begin
+        CommWkshtLine.SetCurrentKey("Salesperson Code", "Customer No.");
+        if not (SalespersonFilter = '') then
+            CommWkshtLine.SetRange("Salesperson Code", SalespersonFilter);
+        if CommWkshtLine.FindSet(false, false) then begin
+            EntryNo := 0;
             repeat
                 EntryNo += 1;
-                CommPmtEntry2.Init();
-                CommPmtEntry2."Entry No." := EntryNo;
-                CommPmtEntry2."Batch Name" := CommWkshtLine2."Batch Name";
-                CommPmtEntry2."Entry Type" := CommWkshtLine2."Entry Type";
-                CommPmtEntry2."Posting Date" := CommWkshtLine2."Posting Date";
-                CommPmtEntry2."Payout Date" := CommWkshtLine2."Payout Date";
-                CommPmtEntry2."Salesperson Code" := CommWkshtLine2."Salesperson Code";
-                CommPmtEntry2."Customer No." := CommWkshtLine2."Customer No.";
-                CommPmtEntry2."Document No." := CommWkshtLine2."Source Document No.";
-                CommPmtEntry2.Amount := CommWkshtLine2.Amount;
-                CommPmtEntry2."Commission Plan Code" := CommWkshtLine2."Commission Plan Code";
-                CommPmtEntry2.Description := CommWkshtLine.Description;
-                CommPmtEntry2.Insert();
-            until CommWkshtLine2.Next() = 0;
+                TempCommPmtEntry.Init();
+                TempCommPmtEntry."Entry No." := EntryNo;
+                TempCommPmtEntry."Batch Name" := CommWkshtLine."Batch Name";
+                TempCommPmtEntry."Entry Type" := CommWkshtLine."Entry Type";
+                TempCommPmtEntry."Posting Date" := CommWkshtLine."Posting Date";
+                TempCommPmtEntry."Payout Date" := CommWkshtLine."Payout Date";
+                TempCommPmtEntry."Salesperson Code" := CommWkshtLine."Salesperson Code";
+                TempCommPmtEntry."Customer No." := CommWkshtLine."Customer No.";
+                TempCommPmtEntry."Document No." := CommWkshtLine."Source Document No.";
+                TempCommPmtEntry.Amount := CommWkshtLine.Amount;
+                TempCommPmtEntry."Commission Plan Code" := CommWkshtLine."Commission Plan Code";
+                TempCommPmtEntry.Description := CommWkshtLine.Description;
+                TempCommPmtEntry.Insert();
+            until CommWkshtLine.Next() = 0;
+            FillTempSalesPerson();
+        end else begin
+            Error(NothingToExportErr);
         end;
     end;
 
-    local procedure CopyLedgerToLedger(var CommPmtEntry2: Record CommissionPaymentEntryTigCM; var CommPmtEntry3: Record CommissionPaymentEntryTigCM; SalespersonFilter: Text[100]);
+    local procedure CopyPmtEntryToTempPmtEntry();
     begin
-        CommPmtEntry2.SetCurrentKey("Salesperson Code", "Customer No.");
-        if SalespersonFilter <> '' then
-            CommPmtEntry2.SetFilter("Salesperson Code", SalespersonFilter);
-        if CommPmtEntry2.FindSet() then begin
+        CommPmtEntry.SetCurrentKey("Salesperson Code", "Customer No.");
+        if not (SalespersonFilter = '') then
+            CommPmtEntry.SetFilter("Salesperson Code", SalespersonFilter);
+        if CommPmtEntry.FindSet(false, false) then begin
             repeat
-                CommPmtEntry3 := CommPmtEntry2;
-                CommPmtEntry3.Insert();
-            until CommPmtEntry2.Next() = 0;
+                TempCommPmtEntry := CommPmtEntry;
+                TempCommPmtEntry.Insert();
+            until CommPmtEntry.Next() = 0;
+            FillTempSalesPerson();
+        end else begin
+            Error(NothingToExportErr);
         end;
     end;
 
-    local procedure WriteExcelWkshtHeader(CreateNewSheet: Boolean; NewSheetCaption: Text[50]);
+    local procedure FillTempSalesPerson()
     begin
-        if not BookOpen then begin
-            ExcelBuf.DeleteAll();
-            ExcelBuf.CreateBook('', NewSheetCaption);
-            BookOpen := true;
+        TempSalesperson.Reset();
+        TempSalesperson.DeleteAll();
+        LastSalespersonCode := '';
+
+        TempCommPmtEntry.Reset();
+        TempCommPmtEntry.SetCurrentKey("Salesperson Code");
+        if TempCommPmtEntry.FindSet() then begin
+            repeat
+                if not (TempCommPmtEntry."Salesperson Code" = LastSalespersonCode) then begin
+                    LastSalespersonCode := TempCommPmtEntry."Salesperson Code";
+                    if not TempSalesperson.Get(TempCommPmtEntry."Salesperson Code") then begin
+                        Salesperson.Get(TempCommPmtEntry."Salesperson Code");
+                        TempSalesperson := Salesperson;
+                        TempSalesperson.Insert();
+                    end;
+                end;
+            until TempCommPmtEntry.Next() = 0;
+        end else begin
+            Error(NothingToExportErr);
         end;
-
-        if CreateNewSheet then begin
-            ExcelBuf.CreateNewSheet(NewSheetCaption);
-            ExcelBuf.DeleteAll();
-        end;
-
-        EnterCell(1, 1, CopyStr(CompanyName(), 1, 250), true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(2, 1, ReportTitle, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(3, 1, Format(ReportRunTime) + ': ' + UserId(), true, false, '', ExcelBuf."Cell Type"::Text);
-        RowNo := 5;
-
-        EnterCell(RowNo, 1, BatchNameLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 2, SalespersonCodeLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 3, EntryTypeLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 4, PostingDateLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 5, PayoutDateLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 6, CustomerNoLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 7, DocumentNoLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 8, DescriptionLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 9, CommissionPlanLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        EnterCell(RowNo, 10, AmountLbl, true, false, '', ExcelBuf."Cell Type"::Text);
-        RowNo := 6;
     end;
 
-    procedure SetSourceWorksheet(var CommWkshtLine2: Record CommissionWksheetLineTigCM);
+    local procedure WriteExcelWkshtHeader(CreateNewFile: Boolean; NewSheetCaption: Text[50]);
     begin
-        if CommWkshtLine2.IsEmpty() then
-            ERROR(NothingToPrintErr);
-        CommWkshtLine := CommWkshtLine2;
-        CommWkshtLine.CopyFilters(CommWkshtLine2);
-        Source := Source::Worksheet;
+        if CreateNewFile then begin
+            TempExcelBuffer.CreateNewBook(NewSheetCaption);
+        end else begin
+            TempExcelBuffer.SelectOrAddSheet(NewSheetCaption);
+        end;
+
+        TempExcelBuffer.ClearNewRow();
+        TempExcelBuffer.NewRow();
+        TempExcelBuffer.AddColumn(CopyStr(CompanyName(), 1, 250), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.NewRow();
+        TempExcelBuffer.AddColumn(ReportTitle, false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.NewRow();
+        TempExcelBuffer.AddColumn(Format(ReportRunTime) + ': ' + UserId(), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.NewRow();
+        TempExcelBuffer.NewRow();
+
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Batch Name"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Salesperson Code"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Entry Type"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Posting Date"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Payout Date"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CustomerNameLbl, false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Document No."), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption(Description), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption("Commission Plan Code"), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
+        TempExcelBuffer.AddColumn(CommPmtEntry.FieldCaption(Amount), false, '', true, false, false, '', TempExcelBuffer."Cell Type"::Text);
     end;
 
-    procedure SetSourcePosted(var CommPmtEntry2: Record CommissionPaymentEntryTigCM);
+    local procedure GetCurrentRow(var MyCurrentRow: Integer)
+    var
+        MyCurrentRowVariant: Variant;
     begin
-        if CommPmtEntry2.IsEmpty() then
-            ERROR(NothingToPrintErr);
-        CommPmtEntry := CommPmtEntry2;
-        CommPmtEntry.CopyFilters(CommPmtEntry2);
-        Source := Source::Posted;
+        TempExcelBuffer.UTgetGlobalValue('CurrentRow', MyCurrentRowVariant);
+        if MyCurrentRowVariant.IsInteger() then
+            MyCurrentRow := MyCurrentRowVariant;
     end;
 }
-

@@ -31,6 +31,13 @@ report 80000 "SuggestCommissionsTigCM"
         {
             DataItemTableView = sorting("Customer No.", Open) where(Open = const(true));
 
+            trigger OnPreDataItem();
+            begin
+                Customer.CopyFilter("No.", "Customer No.");
+                SuggestCommissions.InitCalculation(BatchName, PostingDate, PayoutDate);
+                SuggestCommissions.SetSalespersonFilter("Salesperson/Purchaser");
+            end;
+
             trigger OnAfterGetRecord();
             begin
                 //Factor in pending worksheet lines and pending payment entries
@@ -40,13 +47,6 @@ report 80000 "SuggestCommissionsTigCM"
                     CurrReport.Skip();
 
                 SuggestCommissions.CalculateCommission("Comm. Approval Entry", BatchName);
-            end;
-
-            trigger OnPreDataItem();
-            begin
-                Customer.CopyFilter("No.", "Customer No.");
-                SuggestCommissions.InitCalculation(BatchName, PostingDate, PayoutDate);
-                SuggestCommissions.SetSalespersonFilter("Salesperson/Purchaser");
             end;
         }
     }
@@ -59,13 +59,13 @@ report 80000 "SuggestCommissionsTigCM"
         {
             area(content)
             {
-                field(ThePostingDate; PostingDate)
+                field(PostingDateLbl; PostingDate)
                 {
                     Caption = 'Posting Date';
                     ApplicationArea = All;
                     ToolTip = 'Specifies the Posting Date';
                 }
-                field(ThePayoutDate; PayoutDate)
+                field(PayoutDateLbl; PayoutDate)
                 {
                     Caption = 'Payout Date';
                     ApplicationArea = All;
@@ -77,7 +77,7 @@ report 80000 "SuggestCommissionsTigCM"
 
     trigger OnPostReport();
     begin
-        MESSAGE(CompleteMsg);
+        Message(CompleteMsg);
     end;
 
     trigger OnPreReport();
